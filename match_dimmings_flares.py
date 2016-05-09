@@ -4,6 +4,9 @@ Created on Tue May  3 16:02:21 2016
 
 @author: alyshareinard
 """
+
+import sys
+
 sys.path.append('../common/')
 
 def match_dimmings_flares():

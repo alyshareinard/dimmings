@@ -13,9 +13,9 @@ from datetime import datetime, timezone
 from sunpy_time import parse_time
 
 def read_Lars_dimmings():
-    rootdir=os.getcwd()+"/Lars dimmings/Example_dimmings/"  
+ #   rootdir=os.getcwd()+"/Lars dimmings/Example_dimmings/"  
 #    print("root first", rootdir)
-    rootdir="/Users/alyshareinard/Dropbox/work/data/Lars dimmings/Example_dimmings/"
+    
 #    print("root", rootdir)
   #  dim_num=[]
     area_mm_total=[]
@@ -26,7 +26,20 @@ def read_Lars_dimmings():
     north_coos=[]
     south_coos=[]
     bad_files=[]
-    eventdirs=os.listdir(rootdir)
+    if os.sep=="/":
+        osdir=os.path.join("Users", "alyshareinard")
+    else:
+        osdir=os.path.join("C:"+os.sep+"Users", "alysha.reinard.SWPC")
+
+    rootdir=os.path.join(osdir, "Dropbox", "Work", "data", "Lars dimmings", "Example_dimmings")+os.sep
+    print("fulldir", rootdir)
+    try:
+        eventdirs=os.listdir(rootdir)
+    except:
+
+        eventdirs=[]
+
+        
     for eachdir in eventdirs:
 #        print("eachdir", eachdir)
     
@@ -34,7 +47,15 @@ def read_Lars_dimmings():
         if eachdir!=".DS_Store":
             time_through=0
             got_time=0
-            files=os.listdir(rootdir+eachdir+"/SAV/")
+            print("eachdir", eachdir)
+            try:
+                print('separator looks like', os.sep)
+                full_dir=os.path.join(rootdir+eachdir, "SAV")+os.sep
+                print("dir", full_dir)
+                files=os.listdir(rootdir+eachdir+os.sep+"SAV"+os.sep)
+                print("files", files)
+            except:
+                files=[]
             for file in files:
 #                print(file)
                 if file.startswith("contdim") and got_time==0:

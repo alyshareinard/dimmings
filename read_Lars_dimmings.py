@@ -14,7 +14,9 @@ from sunpy_time import parse_time
 
 def read_Lars_dimmings():
     rootdir=os.getcwd()+"/Lars dimmings/Example_dimmings/"  
-    print("root", rootdir)
+#    print("root first", rootdir)
+    rootdir="/Users/alyshareinard/Dropbox/work/data/Lars dimmings/Example_dimmings/"
+#    print("root", rootdir)
   #  dim_num=[]
     area_mm_total=[]
     thresh=[]
@@ -26,84 +28,88 @@ def read_Lars_dimmings():
     bad_files=[]
     eventdirs=os.listdir(rootdir)
     for eachdir in eventdirs:
+#        print("eachdir", eachdir)
+    
 #        print(rootdir+eachdir+"/SAV/")
-        files=os.listdir(rootdir+eachdir+"/SAV/")
-        time_through=0
-        got_time=0
-        for file in files:
-            if file.startswith("contdim") and got_time==0:
-                data=readsav(rootdir+eachdir+"/SAV/"+file)
-##                print(data)
-#                print("reading file", file)
-                time_val=parse_time(data['dimstr_cont'].firstbox_time[0], timezone.utc)
-#                print("time val is", time_val, data['dimstr_cont'].firstbox_time)
- #               got_time=1
-            if file.startswith("coordinates") and file.endswith(".sav"):
-
-#                    print("time_through", time_through)
-                filepath=rootdir+eachdir+"/SAV"+os.sep+file
-#                print("reading", filepath) 
-                data = readsav(filepath)
-#                    print("east from file", data['dimstr3'].east_coos)
-#                print("len", len(data['dimstr3'].east_coos[0]))
-#                if len(data['dimstr3'].east_coos[0])>1:
-#                    bad_files.append(filepath)
-#                    print('bad file', filepath)
-
-                if time_through==0:
-
-#                    print("starting new directory")
-#                        print(data['dimstr3'].time[0])
-                    #time_val=data['dimstr3'].time[0]
-#                    dim=data['dimstr3'].dim_num[0]
-                    thr=data['dimstr3'].thresh[0]
-                    area=sum(data['dimstr3'].area_mm_total[0])
-                    east=min(data['dimstr3'].east_coos[0])
-                    west=max(data['dimstr3'].west_coos[0])
-                    north=max(data['dimstr3'].north_coos[0])
-                    south=min(data['dimstr3'].south_coos[0])
-                    time_val=parse_time(data['dimstr3'].time, time_format="utime")
-#                    print(time_val, data['dimstr3'].time)
-                    time_through=1
-                else:
-#                    print("time", data['dimstr3'].time)
-#                    print("continuing in this directory")
- #                   if dim !=data['dimstr3'].dim_num[0]:
- #                       print("DIM!", dim[0], data['dimstr3'].dim_num[0])
-                    if thr !=data['dimstr3'].thresh[0]:
-                        print("THRESH!", thresh, data)
-                    if area<sum(data['dimstr3'].area_mm_total[0]):
+        if eachdir!=".DS_Store":
+            time_through=0
+            got_time=0
+            files=os.listdir(rootdir+eachdir+"/SAV/")
+            for file in files:
+#                print(file)
+                if file.startswith("contdim") and got_time==0:
+                    data=readsav(rootdir+eachdir+"/SAV/"+file)
+#                    print(data)
+    #                print("reading file", file)
+                    time_val=parse_time(data['dimstr_cont'].firstbox_time[0], timezone.utc)
+    #                print("time val is", time_val, data['dimstr_cont'].firstbox_time)
+     #               got_time=1
+                if file.startswith("coordinates") and file.endswith(".sav"):
+    
+    #                    print("time_through", time_through)
+                    filepath=rootdir+eachdir+"/SAV"+os.sep+file
+    #                print("reading", filepath) 
+                    data = readsav(filepath)
+    #                    print("east from file", data['dimstr3'].east_coos)
+    #                print("len", len(data['dimstr3'].east_coos[0]))
+    #                if len(data['dimstr3'].east_coos[0])>1:
+    #                    bad_files.append(filepath)
+    #                    print('bad file', filepath)
+    
+                    if time_through==0:
+    
+    #                    print("starting new directory")
+    #                        print(data['dimstr3'].time[0])
+                        #time_val=data['dimstr3'].time[0]
+    #                    dim=data['dimstr3'].dim_num[0]
+                        thr=data['dimstr3'].thresh[0]
                         area=sum(data['dimstr3'].area_mm_total[0])
-                        time_val=parse_time(data['dimstr3'].time, time_format="utime")
-                        #print(time_val, data['dimstr3'].time)
-
-#                    print("north", north)
-#                    print("new north", data['dimstr3'].north_coos[0])
-#                    print("south", south)
-#                    print("new south", data['dimstr3'].south_coos[0])
-
-                    if east>min(data['dimstr3'].east_coos[0]):
-#                        print("east is smaller", east, data['dimstr3'].east_coos[0])
                         east=min(data['dimstr3'].east_coos[0])
-                        
-                    if west<max(data['dimstr3'].west_coos[0]):
-#                        print("west change", west, data['dimstr3'].west_coos[0])
                         west=max(data['dimstr3'].west_coos[0])
-
-
-                    if south>min(data['dimstr3'].south_coos[0]):
-#                        print("south change", south, data['dimstr3'].south_coos[0])
-                        south=min(data['dimstr3'].south_coos[0])
-                        
-                    if north<max(data['dimstr3'].north_coos[0]):
-#                        print("north is smaller", north, data['dimstr3'].north_coos[0])
                         north=max(data['dimstr3'].north_coos[0])
-                        
-#                        print("area", data['dimstr3'].area_mm_total)
-#                        print("east", data['dimstr3'].east_coos, east)   
-#                        print("west", data['dimstr3'].west_coos, west)
-#                        print("north", data['dimstr3'].north_coos, north)
-#                        print("south", data['dimstr3'].south_coos, south)
+                        south=min(data['dimstr3'].south_coos[0])
+                        time_val=parse_time(data['dimstr3'].time, time_format="utime")
+    #                    print(time_val, data['dimstr3'].time)
+                        time_through=1
+                    else:
+    #                    print("time", data['dimstr3'].time)
+    #                    print("continuing in this directory")
+     #                   if dim !=data['dimstr3'].dim_num[0]:
+     #                       print("DIM!", dim[0], data['dimstr3'].dim_num[0])
+                        if thr !=data['dimstr3'].thresh[0]:
+                            print("THRESH!", thresh, data)
+                        if area<sum(data['dimstr3'].area_mm_total[0]):
+                            area=sum(data['dimstr3'].area_mm_total[0])
+                            time_val=parse_time(data['dimstr3'].time, time_format="utime")
+                            #print(time_val, data['dimstr3'].time)
+    
+    #                    print("north", north)
+    #                    print("new north", data['dimstr3'].north_coos[0])
+    #                    print("south", south)
+    #                    print("new south", data['dimstr3'].south_coos[0])
+    
+                        if east>min(data['dimstr3'].east_coos[0]):
+    #                        print("east is smaller", east, data['dimstr3'].east_coos[0])
+                            east=min(data['dimstr3'].east_coos[0])
+                            
+                        if west<max(data['dimstr3'].west_coos[0]):
+    #                        print("west change", west, data['dimstr3'].west_coos[0])
+                            west=max(data['dimstr3'].west_coos[0])
+    
+    
+                        if south>min(data['dimstr3'].south_coos[0]):
+    #                        print("south change", south, data['dimstr3'].south_coos[0])
+                            south=min(data['dimstr3'].south_coos[0])
+                            
+                        if north<max(data['dimstr3'].north_coos[0]):
+    #                        print("north is smaller", north, data['dimstr3'].north_coos[0])
+                            north=max(data['dimstr3'].north_coos[0])
+                            
+    #                        print("area", data['dimstr3'].area_mm_total)
+    #                        print("east", data['dimstr3'].east_coos, east)   
+    #                        print("west", data['dimstr3'].west_coos, west)
+    #                        print("north", data['dimstr3'].north_coos, north)
+    #                        print("south", data['dimstr3'].south_coos, south)
         try:                
             area_mm_total.append(area)
             east_coos.append(east)
@@ -113,7 +119,7 @@ def read_Lars_dimmings():
             time.append(time_val)
         except:
             print("no data for directory", eachdir)
-            
+                
 
     print("area", area_mm_total)
     print("east", east_coos)

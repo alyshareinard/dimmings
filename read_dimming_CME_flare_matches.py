@@ -141,7 +141,7 @@ def read_dimming_CME_flare_matches():
 #    print("training", training_set)
 #    print("crossval", crossval_set)
 #    print("testing", testing_set)
-    print(len(training_set), len(crossval_set), len(testing_set), num_events)
+#    print(len(training_set), len(crossval_set), len(testing_set), num_events)
     
     cme_training={'dim_name':[dim_name[x] for x in training_set], 
     'date':[cme_date[x] for x in training_set], 

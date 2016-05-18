@@ -19,13 +19,13 @@ def read_Lars_dimmings_simple():
 #    print("root", rootdir)
   #  dim_num=[]
     area_mm_total=[]
-    thresh=[]
+#    thresh=[]
     time=[]
     east_coos=[]
     west_coos=[]
     north_coos=[]
     south_coos=[]
-    bad_files=[]
+#    bad_files=[]
     if os.sep=="/":
         osdir=os.sep+os.path.join("Users", "alyshareinard")
     else:

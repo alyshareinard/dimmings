@@ -7,20 +7,26 @@ Created on Thu Jun  9 14:59:25 2016
 
 
 
-import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
+
 from astropy.io import fits
 from urllib.request import urlopen
 from sunpy.net import vso
 from sunpy.map import Map
 import os
 from sunpy.instr.aia import aiaprep
+import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
 
 def read_SDOfits():
+    print("in SDOfits")
     data_dir='/Users/alyshareinard/Dropbox/work/data/SDO/'
+    data_dir='C:\\Users\\alysha.reinard.SWPC\\Dropbox\\Work\\data\\'
     client=vso.VSOClient()
+    print("defined client")
     qr=client.query_legacy('2013/1/11 03:00:00', '2013/1/11 09:00:00', instrument='AIA', min_wave="193", max_wave="193", unit_wave="Angstrom")
+    print("after client")
     res=client.get(qr, path=data_dir+'{instrument}/{file}.fits').wait()
+    print("after wait")
     for file in os.listdir(data_dir+'/SDO/'):
         original=Map(data_dir+file)
         prepped=aiaprep(original)

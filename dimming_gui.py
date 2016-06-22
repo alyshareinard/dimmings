@@ -20,7 +20,7 @@ import matplotlib.image as mpimg
 def read_SDOfits():
     print("in SDOfits")
     data_dir='/Users/alyshareinard/Dropbox/work/data/SDO/'
-##    data_dir='C:\\Users\\alysha.reinard.SWPC\\Dropbox\\Work\\data\\'
+    data_dir='C:\\Users\\alysha.reinard.SWPC\\Dropbox\\Work\\data\\'
 #    client=vso.VSOClient()
 #    print("defined client")
 #    qr=client.query_legacy('2013/1/11 03:00:00', '2013/1/11 09:00:00', instrument='AIA', min_wave="193", max_wave="193", unit_wave="Angstrom")
@@ -37,7 +37,8 @@ def read_SDOfits():
 #    print("qr_10", len(qr_10))
 #    res=client.get(qr_10, path=data_dir+'{instrument}/{file}.fits').wait()
 #    print("after wait")
-    aia_cube = Map(data_dir+'/AIA*.fits', cube=True)   
+    aia_cube = Map(data_dir+'/AIA/*.fits', cube=True)   
+    print("First, what do we have here??", [m.data for m in aia_cube])
     print("same shape? ", aia_cube.all_maps_same_shape())
     aia_cube.plot
 #    print("size?", aia_cube.size)

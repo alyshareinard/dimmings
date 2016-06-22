@@ -20,22 +20,50 @@ import matplotlib.image as mpimg
 def read_SDOfits():
     print("in SDOfits")
     data_dir='/Users/alyshareinard/Dropbox/work/data/SDO/'
-    data_dir='C:\\Users\\alysha.reinard.SWPC\\Dropbox\\Work\\data\\'
-    client=vso.VSOClient()
-    print("defined client")
-    qr=client.query_legacy('2013/1/11 03:00:00', '2013/1/11 09:00:00', instrument='AIA', min_wave="193", max_wave="193", unit_wave="Angstrom")
-    print("after client")
-    res=client.get(qr, path=data_dir+'{instrument}/{file}.fits').wait()
-    print("after wait")
-    for file in os.listdir(data_dir+'/SDO/'):
-        original=Map(data_dir+file)
-        prepped=aiaprep(original)
-#        imgplot=plt.imshow(original)
-#        plt.colorbar()
-        fig = plt.figure(figsize=(15, 8))
-        fig.add_subplot(1, 2, 1)
-        original.plot()
-        prepped.plot()        
+##    data_dir='C:\\Users\\alysha.reinard.SWPC\\Dropbox\\Work\\data\\'
+#    client=vso.VSOClient()
+#    print("defined client")
+#    qr=client.query_legacy('2013/1/11 03:00:00', '2013/1/11 09:00:00', instrument='AIA', min_wave="193", max_wave="193", unit_wave="Angstrom")
+#    print("after client")
+#    count=0
+#    qr_10=[]
+#    for item in qr:
+#        if count==0:
+#           qr_10.append(item)
+#        count+=1
+#        if count==10:
+#            count=0
+#    print("qr", len(qr))
+#    print("qr_10", len(qr_10))
+#    res=client.get(qr_10, path=data_dir+'{instrument}/{file}.fits').wait()
+#    print("after wait")
+    aia_cube = Map(data_dir+'/AIA*.fits', cube=True)   
+    print("same shape? ", aia_cube.all_maps_same_shape())
+    aia_cube.plot
+#    print("size?", aia_cube.size)
+    aia_cube_array=aia_cube.as_array()
+#    print("size", aia_cube_array.size)
+#    count=0
+#    for file in os.listdir(data_dir+'/AIA/'):
+#        if file !=".DS_Store":
+#            print("file", file)
+#            print("full path", data_dir+"/AIA"+file)
+#            original=Map(data_dir+'/AIA/'+file)
+#            prepped=aiaprep(original)
+#    #        imgplot=plt.imshow(original)
+#    #        plt.colorbar()
+#            if count==0:
+#                pre_image=prepped
+#                count=1
+#            else:
+#                fig = plt.figure(figsize=(15, 8))
+#                fig.add_subplot(1, 2, 1)
+#                print("meta", prepped.meta)
+#                print("data", prepped.data)
+#                prepped=prepped-pre_image
+#                #            original.plot()
+#                prepped.plot() 
+#                break
         
 #foundfile=file_search(lala)
 

@@ -19,22 +19,24 @@ import matplotlib.image as mpimg
 
 def read_SDOfits():
     print("in SDOfits")
-    data_dir='/Users/alyshareinard/Dropbox/work/data/SDO/'
-    data_dir='C:\\Users\\alysha.reinard.SWPC\\Dropbox\\Work\\data\\SDO\\'
-    client=vso.VSOClient()
-    print("defined client")
-    qr=client.query_legacy('2013/1/11 03:00:00', '2013/1/11 09:00:00', instrument='AIA', min_wave="193", max_wave="193", unit_wave="Angstrom")
-    print("after client")
-    count=0
-    qr_10=[]
-    for item in qr:
-        if count==0:
-           qr_10.append(item)
-        count+=1
-        if count==100: 
-            count=0
-    print("qr", len(qr))
-    print("qr_10", len(qr_10))
+    if os.name=='posix':
+        data_dir='/Users/alyshareinard/Dropbox/work/data/SDO/'
+    else:
+        data_dir='C:\\Users\\alysha.reinard.SWPC\\Dropbox\\Work\\data\\SDO\\'
+#    client=vso.VSOClient()
+#    print("defined client")
+#    qr=client.query_legacy('2013/1/11 03:00:00', '2013/1/11 09:00:00', instrument='AIA', min_wave="193", max_wave="193", unit_wave="Angstrom")
+#    print("after client")
+#    count=0
+#    qr_10=[]
+#    for item in qr:
+#        if count==0:
+#           qr_10.append(item)
+#        count+=1
+#        if count==100: 
+#            count=0
+#    print("qr", len(qr))
+#    print("qr_10", len(qr_10))
 #    print("qr_10 vals", qr_10[0])
 #    data_dir='C:\\Users\\alysha.reinard.SWPC\\Dropbox\\Work\\data\\'
 #    client=vso.VSOClient()
@@ -56,8 +58,9 @@ def read_SDOfits():
     aia_cube = Map(data_dir+'/AIA/*.fits', cube=True)   
     print("First, what do we have here??", [m.data for m in aia_cube])
     print("same shape? ", aia_cube.all_maps_same_shape())
+    print(aia_cube[0])
     print("after wait")
-    aia_cube = Map(data_dir+'\\AIA\\*.fits', cube=True)  
+#    aia_cube = Map(data_dir+'\\AIA\\*.fits', cube=True)  
 
     prepped_cube=aiaprep(aia_cube[0])
     print("made cube")
@@ -65,6 +68,7 @@ def read_SDOfits():
 #    print("same shape? ", aia_cube.all_maps_same_shape())
     plt.figure()
     aia_cube.plot
+    plt.show()
     print("plotted cube")
 #    print("size?", aia_cube.size)
     aia_cube_array=aia_cube.as_array()

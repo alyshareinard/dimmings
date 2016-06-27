@@ -20,6 +20,22 @@ import matplotlib.image as mpimg
 def read_SDOfits():
     print("in SDOfits")
     data_dir='/Users/alyshareinard/Dropbox/work/data/SDO/'
+    data_dir='C:\\Users\\alysha.reinard.SWPC\\Dropbox\\Work\\data\\SDO\\'
+    client=vso.VSOClient()
+    print("defined client")
+    qr=client.query_legacy('2013/1/11 03:00:00', '2013/1/11 09:00:00', instrument='AIA', min_wave="193", max_wave="193", unit_wave="Angstrom")
+    print("after client")
+    count=0
+    qr_10=[]
+    for item in qr:
+        if count==0:
+           qr_10.append(item)
+        count+=1
+        if count==100: 
+            count=0
+    print("qr", len(qr))
+    print("qr_10", len(qr_10))
+#    print("qr_10 vals", qr_10[0])
 #    data_dir='C:\\Users\\alysha.reinard.SWPC\\Dropbox\\Work\\data\\'
 #    client=vso.VSOClient()
 #    print("defined client")
@@ -40,10 +56,31 @@ def read_SDOfits():
     aia_cube = Map(data_dir+'/AIA/*.fits', cube=True)   
     print("First, what do we have here??", [m.data for m in aia_cube])
     print("same shape? ", aia_cube.all_maps_same_shape())
+    print("after wait")
+    aia_cube = Map(data_dir+'\\AIA\\*.fits', cube=True)  
+
+    prepped_cube=aiaprep(aia_cube[0])
+    print("made cube")
+#    print("First, what do we have here??", [m.data for m in aia_cube])
+#    print("same shape? ", aia_cube.all_maps_same_shape())
+    plt.figure()
     aia_cube.plot
+    print("plotted cube")
 #    print("size?", aia_cube.size)
     aia_cube_array=aia_cube.as_array()
 #    print("size", aia_cube_array.size)
+    print("made array")
+    print("size", aia_cube_array.shape)
+    size=aia_cube_array.shape
+    (height, width, length)=size
+    print(length)
+    for val in range(length):
+        if val==0:
+            base=aia_cube_array[:, :, 0]
+        else:
+            aia_cube_array[:, :, val]=aia_cube_array[:, :, val]-base
+    print("size after", aia_cube_array.shape)
+    
 #    count=0
 #    for file in os.listdir(data_dir+'/AIA/'):
 #        if file !=".DS_Store":
@@ -65,6 +102,29 @@ def read_SDOfits():
 #                #            original.plot()
 #                prepped.plot() 
 #                break
+#    print("dir", data_dir+'AIA'+os.sep+'*.fits')
+#    print("list", os.listdir(data_dir+"AIA"+os.sep+r"*.fits"))
+#    for file in os.listdir(data_dir+'AIA'+os.sep+'*.fits'):
+#
+#        print("file", file)
+#        print("full path", data_dir+"AIA"+os.sep+file)
+#        original=Map(data_dir+'AIA'+os.sep+file)
+#        prepped=aiaprep(original)
+##        imgplot=plt.imshow(original)
+##        plt.colorbar()
+#        if count==0:
+#            pre_image=prepped
+#            count=1
+#        else:
+#            fig = plt.figure(figsize=(15, 8))
+#            fig.add_subplot(1, 2, 1)
+#            print("meta", prepped.meta)
+#            print("data", prepped.data)
+#            prepped=prepped-pre_image
+#            #            original.plot()
+#            prepped.plot() 
+#            plt.plot([1, 2, 3, 4])
+#            break
         
 #foundfile=file_search(lala)
 

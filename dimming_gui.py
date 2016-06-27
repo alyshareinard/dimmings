@@ -20,7 +20,7 @@ import matplotlib.image as mpimg
 def read_SDOfits():
     print("in SDOfits")
     data_dir='/Users/alyshareinard/Dropbox/work/data/SDO/'
-    data_dir='C:\\Users\\alysha.reinard.SWPC\\Dropbox\\Work\\data\\'
+#    data_dir='C:\\Users\\alysha.reinard.SWPC\\Dropbox\\Work\\data\\'
 #    client=vso.VSOClient()
 #    print("defined client")
 #    qr=client.query_legacy('2013/1/11 03:00:00', '2013/1/11 09:00:00', instrument='AIA', min_wave="193", max_wave="193", unit_wave="Angstrom")

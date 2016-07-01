@@ -84,7 +84,9 @@ def read_SDOfits():
         else:
             aia_cube_array[:, :, val]=aia_cube_array[:, :, val]-base
     print("size after", aia_cube_array.shape)
-    
+    print("size of base", base.shape)
+    plt.plot(base)
+    plt.show
 #    count=0
 #    for file in os.listdir(data_dir+'/AIA/'):
 #        if file !=".DS_Store":

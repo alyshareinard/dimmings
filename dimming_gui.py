@@ -85,7 +85,8 @@ def read_SDOfits():
             aia_cube_array[:, :, val]=aia_cube_array[:, :, val]-base
     print("size after", aia_cube_array.shape)
     print("size of base", base.shape)
-    plt.plot(base)
+#    plt.plot(base)
+    plt.imshow(aia_cube_array[:,:,4])
     plt.show
 #    count=0
 #    for file in os.listdir(data_dir+'/AIA/'):

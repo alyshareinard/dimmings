@@ -16,6 +16,10 @@ import os
 from sunpy.instr.aia import aiaprep
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
+import glob
+from functools import reduce
+import numpy as np
+from sunpy.physics.transforms.solar_rotation import mapcube_solar_derotate
 
 def read_SDOfits():
     print("in SDOfits")
@@ -55,40 +59,83 @@ def read_SDOfits():
 #    print("qr_10", len(qr_10))
 #    res=client.get(qr_10, path=data_dir+'{instrument}/{file}.fits').wait()
 #    print("after wait")
-    aia_cube = Map(data_dir+'/AIA/*.fits', cube=True)   
-    print("First, what do we have here??", [m.data for m in aia_cube])
-    print("same shape? ", aia_cube.all_maps_same_shape())
-    print(aia_cube[0])
-    print("after wait")
-#    aia_cube = Map(data_dir+'\\AIA\\*.fits', cube=True)  
-
-    prepped_cube=aiaprep(aia_cube[0])
-    print("made cube")
+#    filelist=os.listdir(os.path.join(data_dir,'AIA', '*.fits'))
+    filelist=glob.glob(os.path.join(data_dir,'AIA', '*.fits'))
+    print("filelist", filelist)
+    preppedlist=[]
+    difflist=[]
+    count=0
+    for file in filelist:
+        if count==0:
+            base=aiaprep(Map(file))
+            count=1
+        prepped_image=aiaprep(Map(file))
+#        prepped_image.plot()
+#        plt.show()
+        preppedlist.append(prepped_image)
+        
+    prepped_cube=Map(preppedlist, cube=True)
+    derotated_prepped_cube=mapcube_solar_derotate(prepped_cube, clip=False)
+    print("len?", len(derotated_prepped_cube))
+    for i in range(1, len(derotated_prepped_cube)):
+        diffimage=derotated_prepped_cube[i]
+        diffimage.data=diffimage.data-base.data
+        diffimage.plot(vmin=-150, vmax=150)
+        plt.show()
+        
+        difflist.append(diffimage)
+#        if count>0:
+#            diffimage=prepped_image
+#            diffimage.data=prepped_image.data-base.data
+#            print(np.mean(diffimage.data), np.max(diffimage.data), np.min(diffimage.data))#, max(diffimage.data), min(diffimage.data))
+#            print(base.data[0:20])
+#            diffimage=prepped_image.data-base.data
+#            diffimage.plot(vmin=-150, vmax=150)
+#            plt.show()
+#            difflist.append(prepped_image.data-base.data)
+            
+ 
+#    print("length", len(preppedlist[0]))
+#    baseimage=preppedlist[0]
+    
+    
+    
+    
+#    aia_cube = Map(data_dir+'/AIA/*.fits', cube=True)   
 #    print("First, what do we have here??", [m.data for m in aia_cube])
 #    print("same shape? ", aia_cube.all_maps_same_shape())
-    plt.figure()
-    aia_cube.plot
-    plt.show()
-    print("plotted cube")
+#    print(aia_cube[0])
+#    print("after wait")
+#    aia_cube = Map(data_dir+'\\AIA\\*.fits', cube=True)  
+
+#    prepped_cube=aiaprep(aia_cube[0])
+#    print("made cube")
+#    print("First, what do we have here??", [m.data for m in aia_cube])
+#    print("same shape? ", aia_cube.all_maps_same_shape())
+#    plt.figure()
+#    aia_cube.plot
+#    plt.show()
+#    print("plotted cube")
 #    print("size?", aia_cube.size)
-    aia_cube_array=aia_cube.as_array()
+ #   aia_cube_array=aia_cube.as_array()
+ #   prepped_cube=aiaprep(aia_cube_array)
 #    print("size", aia_cube_array.size)
-    print("made array")
-    print("size", aia_cube_array.shape)
-    size=aia_cube_array.shape
-    (height, width, length)=size
-    print(length)
-    for val in range(length):
-        if val==0:
-            base=aia_cube_array[:, :, 0]
-        else:
-            aia_cube_array[:, :, val]=aia_cube_array[:, :, val]-base
-    print("size after", aia_cube_array.shape)
-    print("size of base", base.shape)
-#    plt.plot(base)
-    plt.imshow(aia_cube_array[:,:,4])
-    plt.show
-#    count=0
+ #   print("made array")
+ #   print("size", aia_cube_array.shape)
+ #   size=aia_cube_array.shape
+ #   (height, width, length)=size
+ #   print(length)
+ #   for val in range(length):
+ #       if val==0:
+ #           base=aia_cube_array[:, :, 0]
+ #       else:
+ #           aia_cube_array[:, :, val]=aia_cube_array[:, :, val]-base
+ #   print("size after", aia_cube_array.shape)
+ #   print("size of base", base.shape)
+##    plt.plot(base)
+ #   plt.imshow(aia_cube_array[:,:,4])
+ #   plt.show
+##    count=0
 #    for file in os.listdir(data_dir+'/AIA/'):
 #        if file !=".DS_Store":
 #            print("file", file)

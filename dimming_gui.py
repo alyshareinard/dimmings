@@ -21,24 +21,25 @@ from functools import reduce
 import numpy as np
 from sunpy.physics.transforms.solar_rotation import mapcube_solar_derotate
 
+
 def read_SDOfits():
     print("in SDOfits")
     if os.name=='posix':
         data_dir='/Users/alyshareinard/Dropbox/work/data/SDO/'
     else:
         data_dir='C:\\Users\\alysha.reinard.SWPC\\Dropbox\\Work\\data\\SDO\\'
-#    client=vso.VSOClient()
-#    print("defined client")
-#    qr=client.query_legacy('2013/1/11 03:00:00', '2013/1/11 09:00:00', instrument='AIA', min_wave="193", max_wave="193", unit_wave="Angstrom")
-#    print("after client")
-#    count=0
-#    qr_10=[]
-#    for item in qr:
-#        if count==0:
-#           qr_10.append(item)
-#        count+=1
-#        if count==100: 
-#            count=0
+    client=vso.VSOClient()
+    print("defined client")
+    qr=client.query_legacy('2013/1/23 09:36:00', '2013/1/23 14:15:00', instrument='AIA', min_wave="193", max_wave="193", unit_wave="Angstrom")# , resolution=0.5)
+    print("after client")
+    count=0
+    qr_10=[]
+    for item in qr:
+        if count==0:
+           qr_10.append(item)
+        count+=1
+        if count==100: 
+            count=0
 #    print("qr", len(qr))
 #    print("qr_10", len(qr_10))
 #    print("qr_10 vals", qr_10[0])
@@ -57,8 +58,10 @@ def read_SDOfits():
 #            count=0
 #    print("qr", len(qr))
 #    print("qr_10", len(qr_10))
-#    res=client.get(qr_10, path=data_dir+'{instrument}/{file}.fits').wait()
-#    print("after wait")
+    res=client.get(qr_10, path=data_dir+'{instrument}/{file}.fits').wait()
+    print("after wait")
+    
+def process_dimmings():  
 #    filelist=os.listdir(os.path.join(data_dir,'AIA', '*.fits'))
     filelist=glob.glob(os.path.join(data_dir,'AIA', '*.fits'))
     print("filelist", filelist)
@@ -66,10 +69,14 @@ def read_SDOfits():
     difflist=[]
     count=0
     for file in filelist:
+        print("file", file)
         if count==0:
             base=aiaprep(Map(file))
+            print("base exp time", base.exposure_time)
+            print("buffer line")
             count=1
         prepped_image=aiaprep(Map(file))
+
 #        prepped_image.plot()
 #        plt.show()
         preppedlist.append(prepped_image)
@@ -79,8 +86,21 @@ def read_SDOfits():
     print("len?", len(derotated_prepped_cube))
     for i in range(1, len(derotated_prepped_cube)):
         diffimage=derotated_prepped_cube[i]
+        print("exposure time", diffimage.exposure_time)
+
+#        diffimage1=copy(diffimage)
+#        print("shape", diffimage.data.shape)
+#        x=500
+#        y=520
+#        print("before", diffimage.data[x][x:y], diffimage.exposure_time)
+#        base.plot(vmin=-1500, vmax=1500)
+#        plt.show()
+#        print("base", base.data[x][x:y], base.exposure_time)
+#        diffimage.plot(vmin=-1500, vmax=1500)
+#        plt.show()
         diffimage.data=diffimage.data-base.data
-        diffimage.plot(vmin=-150, vmax=150)
+#        print("after", diffimage.data[x][x:y], diffimage.exposure_time)
+        diffimage.plot(vmin=-1500, vmax=1500)
         plt.show()
         
         difflist.append(diffimage)
@@ -94,7 +114,7 @@ def read_SDOfits():
 #            plt.show()
 #            difflist.append(prepped_image.data-base.data)
             
- 
+#    return [diffimage1, base, diffimage]
 #    print("length", len(preppedlist[0]))
 #    baseimage=preppedlist[0]
     

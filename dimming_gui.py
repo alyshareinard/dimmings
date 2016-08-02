@@ -62,6 +62,11 @@ def read_SDOfits():
     print("after wait")
     
 def process_dimmings():  
+    if os.name=='posix':
+        data_dir='/Users/alyshareinard/Dropbox/work/data/SDO/'
+    else:
+        data_dir='C:\\Users\\alysha.reinard.SWPC\\Dropbox\\Work\\data\\SDO\\'
+
 #    filelist=os.listdir(os.path.join(data_dir,'AIA', '*.fits'))
     filelist=glob.glob(os.path.join(data_dir,'AIA', '*.fits'))
     print("filelist", filelist)
@@ -219,4 +224,5 @@ def process_dimmings():
 #    plt.colorbar()
 #    hdulist.close()
     
-read_SDOfits()
+#read_SDOfits()
+process_dimmings()

@@ -19,6 +19,7 @@ import matplotlib.image as mpimg
 import glob
 from functools import reduce
 import numpy as np
+import copy
 from sunpy.physics.transforms.solar_rotation import mapcube_solar_derotate
 
 
@@ -30,7 +31,7 @@ def read_SDOfits():
         data_dir='C:\\Users\\alysha.reinard.SWPC\\Dropbox\\Work\\data\\SDO\\'
     client=vso.VSOClient()
     print("defined client")
-    qr=client.query_legacy('2013/1/23 09:36:00', '2013/1/23 14:15:00', instrument='AIA', min_wave="193", max_wave="193", unit_wave="Angstrom")# , resolution=0.5)
+    qr=client.query_legacy('2013/1/23 14:11:00', '2013/1/23 14:15:00', instrument='AIA', min_wave="193", max_wave="193", unit_wave="Angstrom")# , resolution=0.5)
     print("after client")
     count=0
     qr_10=[]
@@ -85,12 +86,16 @@ def process_dimmings():
 #        prepped_image.plot()
 #        plt.show()
         preppedlist.append(prepped_image)
-        
+ 
+#    base.plot(title="base")
+#    plt.show()       
     prepped_cube=Map(preppedlist, cube=True)
     derotated_prepped_cube=mapcube_solar_derotate(prepped_cube, clip=False)
     print("len?", len(derotated_prepped_cube))
     for i in range(1, len(derotated_prepped_cube)):
-        diffimage=derotated_prepped_cube[i]
+        diffimage=copy.deepcopy(derotated_prepped_cube[i])
+#        diffimage.plot(title="detorated")
+#        plt.show()
         print("exposure time", diffimage.exposure_time)
 
 #        diffimage1=copy(diffimage)
@@ -105,7 +110,7 @@ def process_dimmings():
 #        plt.show()
         diffimage.data=diffimage.data-base.data
 #        print("after", diffimage.data[x][x:y], diffimage.exposure_time)
-        diffimage.plot(vmin=-1500, vmax=1500)
+        diffimage.plot(title="after", vmin=-150, vmax=150)#(vmin=-1500, vmax=1500)
         plt.show()
         
         difflist.append(diffimage)
@@ -122,6 +127,9 @@ def process_dimmings():
 #    return [diffimage1, base, diffimage]
 #    print("length", len(preppedlist[0]))
 #    baseimage=preppedlist[0]
+    base
+    derotated_prepped_cube[0]
+    diffimage
     
     
     

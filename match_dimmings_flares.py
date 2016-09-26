@@ -6,6 +6,8 @@ Created on Tue May  3 16:02:21 2016
 """
 
 import sys
+from datetime import timedelta
+#import read_Lars_dimmings
 
 sys.path.append('../common/')
 
@@ -28,6 +30,21 @@ def match_dimmings_flares():
         print("we have overlap!")
         for index in range(len(dimmings['time'])):
             print(dimmings['time'][index])
+            
+    #let's start with stepping through the dimmings
+    #TODO dimmings is in a weird format -- need to figure that out first.  
+    for dim in dimmings:
+        #this is going to be totally inefficient
+        possibilities=[]
+        for val in xray_flares:
+            timediff=timedelta(hours=2)
+            print("dim", dim)
+            print("flare", val['peak_time'])
+            if val['peak_time']<(dim['time']-timediff) and val['peak_time']>(dim['time']+timediff):
+                possibilities.append(val)
+        print("dimming", dim)
+        print("possibilities", possibilities)
+        
 #        TODO: here's where we put in the code to match up dimmings and flares
     
 match_dimmings_flares()

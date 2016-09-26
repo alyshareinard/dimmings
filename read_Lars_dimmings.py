@@ -27,18 +27,19 @@ def read_Lars_dimmings():
     south_coos=[]
     bad_files=[]
     if os.sep=="/":
-        osdir=os.path.join("Users", "alyshareinard")
+        osdir=os.path.join("/Users", "alyshareinard")
     else:
         osdir=os.path.join("C:"+os.sep+"Users", "alysha.reinard.SWPC")
 
     rootdir=os.path.join(osdir, "Dropbox", "Work", "data", "Lars dimmings", "Example_dimmings")+os.sep
     print("fulldir", rootdir)
+
     try:
         eventdirs=os.listdir(rootdir)
     except:
-
+        print("Nothing found")
         eventdirs=[]
-
+    print(eventdirs)
         
     for eachdir in eventdirs:
 #        print("eachdir", eachdir)

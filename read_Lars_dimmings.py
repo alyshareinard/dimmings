@@ -50,11 +50,11 @@ def read_Lars_dimmings():
             got_time=0
             print("eachdir", eachdir)
             try:
-                print('separator looks like', os.sep)
+#                print('separator looks like', os.sep)
                 full_dir=os.path.join(rootdir+eachdir, "SAV")+os.sep
                 print("dir", full_dir)
                 files=os.listdir(rootdir+eachdir+os.sep+"SAV"+os.sep)
-                print("files", files)
+#                print("files", files)
             except:
                 files=[]
             for file in files:
@@ -143,13 +143,13 @@ def read_Lars_dimmings():
             print("no data for directory", eachdir)
                 
 
-    print("area", area_mm_total)
-    print("east", east_coos)
-    print("west", west_coos)
-    print("north", north_coos)
-    print("south", south_coos)
-    for i in range(len(area_mm_total)):
-        print("time", time[i], "area: ", area_mm_total[i], "east: ", east_coos[i], "west: ", west_coos[i], "north: ", north_coos[i], "south: ", south_coos[i])
+#    print("area", area_mm_total)
+#    print("east", east_coos)
+#    print("west", west_coos)
+#    print("north", north_coos)
+#    print("south", south_coos)
+#    for i in range(len(area_mm_total)):
+#        print("time", time[i], "area: ", area_mm_total[i], "east: ", east_coos[i], "west: ", west_coos[i], "north: ", north_coos[i], "south: ", south_coos[i])
 
     dimmings={'time':time, 'area':area_mm_total, 'eastedge':east_coos, \
     'westedge':west_coos, 'northedge':north_coos, 'southedge':south_coos}

@@ -15,7 +15,7 @@ def match_dimmings_flares():
     dimmings=read_Lars_dimmings()
     print(type(dimmings))
     [ha_flares, xray_flares]=get_flare_catalog()
-    
+    print("!!!!", xray_flares['peak_time'])
     #first check to make sure there is some overlap in dates
     min_dimtime=min(dimmings['time'])
     max_dimtime=max(dimmings['time'])
@@ -28,21 +28,26 @@ def match_dimmings_flares():
     
     if ((min_xray<min_dimtime and max_xray>min_dimtime) or (min_xray<max_dimtime and max_xray>max_dimtime)):
         print("we have overlap!")
-        for index in range(len(dimmings['time'])):
-            print(dimmings['time'][index])
+#        for index in range(len(dimmings['time'])):
+#            print(dimmings['time'][index])
             
+#    print(xray_flares['peak_time'])
     #let's start with stepping through the dimmings
-    #TODO dimmings is in a weird format -- need to figure that out first.  
-    for dim in dimmings:
+    for ind1 in range(len(dimmings['time'])):
+        print("dim", dimmings['time'][ind1])
+#    for dim in dimmings:
         #this is going to be totally inefficient
         possibilities=[]
-        for val in xray_flares:
+        for ind2 in range(len(xray_flares['peak_time'])):
             timediff=timedelta(hours=2)
-            print("dim", dim)
-            print("flare", val['peak_time'])
-            if val['peak_time']<(dim['time']-timediff) and val['peak_time']>(dim['time']+timediff):
-                possibilities.append(val)
-        print("dimming", dim)
+            dimtime=dimmings['time'][ind1]
+            flaretime=xray_flares['peak_time'][ind2]
+
+#            print("ind2", ind1, ind2, len(xray_flares['peak_time']))
+#            print("flare", ind1, ind2, flaretime)
+
+            if flaretime !=None and flaretime<(dimtime+timediff) and flaretime>(dimtime-timediff):
+                possibilities.append(flaretime)
         print("possibilities", possibilities)
         
 #        TODO: here's where we put in the code to match up dimmings and flares

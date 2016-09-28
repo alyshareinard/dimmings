@@ -151,8 +151,13 @@ def read_Lars_dimmings():
 #    for i in range(len(area_mm_total)):
 #        print("time", time[i], "area: ", area_mm_total[i], "east: ", east_coos[i], "west: ", west_coos[i], "north: ", north_coos[i], "south: ", south_coos[i])
 
+    mean_EW=[(x+y)/2 for x,y in zip(east_coos, west_coos)]
+    mean_NS=[(x+y)/2 for x,y in zip(north_coos, south_coos)]
+   
+    
     dimmings={'time':time, 'area':area_mm_total, 'eastedge':east_coos, \
-    'westedge':west_coos, 'northedge':north_coos, 'southedge':south_coos}
+    'westedge':west_coos, 'northedge':north_coos, 'southedge':south_coos, \
+    'mean_EW':mean_EW, 'mean_NS':mean_NS}
     print("in routine", type(dimmings))
     return dimmings
 

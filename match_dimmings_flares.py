@@ -47,10 +47,10 @@ def match_dimmings_flares():
 #            print("flare", ind1, ind2, flaretime)
 
             if flaretime !=None and flaretime<(dimtime+timediff) and flaretime>(dimtime-timediff):
-                possibilities.append(flaretime)
+                possibilities.append(ind2)
         print("possibilities", possibilities)
-        
-#        TODO: here's where we put in the code to match up dimmings and flares
+        print("dimming location EW, NS", dimmings['mean_EW'][ind1], dimmings['mean_NS'][ind1])
+        print("flare location", [xray_flares['location'][x] for x in possibilities])
     
 match_dimmings_flares()
     

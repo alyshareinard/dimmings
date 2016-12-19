@@ -15,8 +15,9 @@ def match_dimmings_flares():
     dimmings=read_Lars_dimmings()
     print(type(dimmings))
     [ha_flares, xray_flares]=get_flare_catalog()
-    print("!!!!", xray_flares['peak_time'])
+#    print("!!!!", xray_flares['peak_time'])
     #first check to make sure there is some overlap in dates
+    print("dimming time", dimmings['time'])
     min_dimtime=min(dimmings['time'])
     max_dimtime=max(dimmings['time'])
     print("dimtime times", min_dimtime, max_dimtime)

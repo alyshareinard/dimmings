@@ -29,7 +29,7 @@ def read_dimming_CME_flare_matches():
     else:
         osdir=os.path.join("C:"+os.sep+"Users", "alysha.reinard.SWPC")
 
-    rootdir=os.path.join(osdir, "Dropbox", "dimming_shared", "SAV_files")+os.sep
+    rootdir=os.path.join(osdir, "Dropbox", "Work", "PROJECTS", "Larisza", "dimming_shared", "SAV_files")+os.sep
 #    print("fulldir", rootdir)
     cme_data=readsav(rootdir+"0cdaw_cmeprops.sav")
 #    print(cme_data['cme'].dim_name)

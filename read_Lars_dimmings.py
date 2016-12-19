@@ -62,7 +62,8 @@ def read_Lars_dimmings():
                 if file.startswith("contdim") and got_time==0:
                     data=readsav(rootdir+eachdir+"/SAV/"+file)
 #                    print(data)
-    #                print("reading file", file)
+#                    print("reading file", file)
+#                    print("time val?", data['dimstr_cont'].firstbox_time[0])
                     time_val=parse_time(data['dimstr_cont'].firstbox_time[0], timezone.utc)
     #                print("time val is", time_val, data['dimstr_cont'].firstbox_time)
      #               got_time=1
@@ -70,7 +71,7 @@ def read_Lars_dimmings():
     
     #                    print("time_through", time_through)
                     filepath=rootdir+eachdir+"/SAV"+os.sep+file
-    #                print("reading", filepath) 
+#                    print("reading", file) 
                     data = readsav(filepath)
     #                    print("east from file", data['dimstr3'].east_coos)
     #                print("len", len(data['dimstr3'].east_coos[0]))

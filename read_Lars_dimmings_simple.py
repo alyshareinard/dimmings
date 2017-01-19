@@ -11,6 +11,7 @@ from scipy.io.idl import readsav
 import os
 from datetime import datetime, timezone
 from sunpy_time import parse_time
+import pandas as pd
 
 def read_Lars_dimmings_simple():
  #   rootdir=os.getcwd()+"/Lars dimmings/Example_dimmings/"  
@@ -26,86 +27,40 @@ def read_Lars_dimmings_simple():
     north_coos=[]
     south_coos=[]
 #    bad_files=[]
+
+
     if os.sep=="/":
-        osdir=os.sep+os.path.join("Users", "alyshareinard")
+        osdir=os.path.join("/Users", "alyshareinard", "Dropbox", "Work")
     else:
-        osdir=os.path.join("C:"+os.sep+"Users", "alysha.reinard.SWPC")
+        osdir=os.path.join("C:"+os.sep+"Users", "alysha.reinard", "Documents")
 
-    rootdir=os.path.join(osdir, "Dropbox", "dimming_shared", "SAV_files")+os.sep
+    rootdir=os.path.join(osdir, "data", "Lars dimmings")+os.sep
+
+
     print("fulldir", rootdir)
-    data=readsav(rootdir+"0alldim_props.sav")
-    print(data['alldim'].dim_name)
+    data=readsav(rootdir+"0alldim_props.sav", python_dict=True)
+    print(data)
+    data=data["alldim"] #contains dim_name, area_mm, time, euv_mean, euv_max, euv_min, bz_mean, absbz_mean, bz_max, bz_min, north_coos, south_coos, east_coos, west_coos
+    print(data[0])
+    #IT IS CONFUSING TO READ THIS IN SINCE THERE ARE ONLY "DIM NAME"s FOR EACH DIMMING AND EVERYTHING ELSE IS MULTPLE PER DIMMING
+    dim_dict={"name": data["DIM_NAME"][0], "time":data["TIME"][0], "area": data["AREA_MM"][0], "EAST_COOS":data["EAST_COOS"][0], "WEST_COOS":data["WEST_COOS"][0], "NORTH_COOS":data["NORTH_COOS"][0], "SOUTH_COOS":data["SOUTH_COOS"][0]}
+    print("NAME", len(dim_dict["name"]))
+    print("area", len(dim_dict["area"]))
+    
+    dimming_df=pd.DataFrame.from_dict(dim_dict)
+#    print(data['alldim'].area)
+    print(dimming_df.keys())
+#    print("time zero", dimming_df["TIME"].shape())
+    
+    time=dimming_df["time"]
+    print(len(time))
+    dimming_df["date"]=[parse_time(x, timezone.utc) for x in dimming_df["time"]]
+    print(dimming_df["date"])
 
-#                       thr=data['dimstr3'].thresh[0]
-#                        area=sum(data['dimstr3'].area_mm_total[0])
-#                        east=min(data['dimstr3'].east_coos[0])
-#                        west=max(data['dimstr3'].west_coos[0])
-#                        north=max(data['dimstr3'].north_coos[0])
-#                        south=min(data['dimstr3'].south_coos[0])
-#                        time_val=parse_time(data['dimstr3'].time, time_format="utime")
-#    #                    print(time_val, data['dimstr3'].time)
-#                        time_through=1
-#                    else:
-#    #                    print("time", data['dimstr3'].time)
-#    #                    print("continuing in this directory")
-#     #                   if dim !=data['dimstr3'].dim_num[0]:
-#     #                       print("DIM!", dim[0], data['dimstr3'].dim_num[0])
-#                        if thr !=data['dimstr3'].thresh[0]:
-#                            print("THRESH!", thresh, data)
-#                        if area<sum(data['dimstr3'].area_mm_total[0]):
-#                            area=sum(data['dimstr3'].area_mm_total[0])
-#                            time_val=parse_time(data['dimstr3'].time, time_format="utime")
-#                            #print(time_val, data['dimstr3'].time)
-#    
-#    #                    print("north", north)
-#    #                    print("new north", data['dimstr3'].north_coos[0])
-#    #                    print("south", south)
-#    #                    print("new south", data['dimstr3'].south_coos[0])
-#    
-#                        if east>min(data['dimstr3'].east_coos[0]):
-#    #                        print("east is smaller", east, data['dimstr3'].east_coos[0])
-#                            east=min(data['dimstr3'].east_coos[0])
-#                            
-#                        if west<max(data['dimstr3'].west_coos[0]):
-#    #                        print("west change", west, data['dimstr3'].west_coos[0])
-#                            west=max(data['dimstr3'].west_coos[0])
-#    
-#    
-#                        if south>min(data['dimstr3'].south_coos[0]):
-#    #                        print("south change", south, data['dimstr3'].south_coos[0])
-#                            south=min(data['dimstr3'].south_coos[0])
-#                            
-#                        if north<max(data['dimstr3'].north_coos[0]):
-#    #                        print("north is smaller", north, data['dimstr3'].north_coos[0])
-#                            north=max(data['dimstr3'].north_coos[0])
-#                            
-#    #                        print("area", data['dimstr3'].area_mm_total)
-#    #                        print("east", data['dimstr3'].east_coos, east)   
-#    #                        print("west", data['dimstr3'].west_coos, west)
-#    #                        print("north", data['dimstr3'].north_coos, north)
-#    #                        print("south", data['dimstr3'].south_coos, south)
-#        try:                
-#            area_mm_total.append(area)
-#            east_coos.append(east)
-#            west_coos.append(west)
-#            north_coos.append(north)
-#            south_coos.append(south)
-#            time.append(time_val)
-#        except:
-#            print("no data for directory", eachdir)
-#                
-#
-#    print("area", area_mm_total)
-#    print("east", east_coos)
-#    print("west", west_coos)
-#    print("north", north_coos)
-#    print("south", south_coos)
-#    for i in range(len(area_mm_total)):
-#        print("time", time[i], "area: ", area_mm_total[i], "east: ", east_coos[i], "west: ", west_coos[i], "north: ", north_coos[i], "south: ", south_coos[i])
-
-    dimmings={'time':time, 'area':area_mm_total, 'eastedge':east_coos, \
-    'westedge':west_coos, 'northedge':north_coos, 'southedge':south_coos}
-    print("in routine", type(dimmings))
-    return dimmings
+    return dimming_df
+    #    dimmings={'time':time, 'area':area_mm_total, 'eastedge':east_coos, \
+#    'westedge':west_coos, 'northedge':north_coos, 'southedge':south_coos}
+#    print("in routine", type(dimmings))
+#    return dimmings
 
 read_Lars_dimmings_simple()

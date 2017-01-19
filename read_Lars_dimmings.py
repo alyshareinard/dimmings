@@ -27,11 +27,11 @@ def read_Lars_dimmings():
     south_coos=[]
     bad_files=[]
     if os.sep=="/":
-        osdir=os.path.join("/Users", "alyshareinard")
+        osdir=os.path.join("/Users", "alyshareinard", "Dropbox", "Work")
     else:
-        osdir=os.path.join("C:"+os.sep+"Users", "alysha.reinard.SWPC")
+        osdir=os.path.join("C:"+os.sep+"Users", "alysha.reinard", "Documents")
 
-    rootdir=os.path.join(osdir, "Dropbox", "Work", "data", "Lars dimmings", "Example_dimmings")+os.sep
+    rootdir=os.path.join(osdir, "data", "Lars dimmings", "Example_dimmings")+os.sep
     print("fulldir", rootdir)
 
     try:
@@ -60,8 +60,8 @@ def read_Lars_dimmings():
             for file in files:
 #                print(file)
                 if file.startswith("contdim") and got_time==0:
-                    data=readsav(rootdir+eachdir+"/SAV/"+file)
-#                    print(data)
+                    data=readsav(rootdir+eachdir+"/SAV/"+file) #contains firstbox_time, curr_euvtime, curr_magtime, doi, area_px, contour_x_coos, contour_y_coos, box_coos, euvfile and magfile
+
 #                    print("reading file", file)
 #                    print("time val?", data['dimstr_cont'].firstbox_time[0])
                     time_val=parse_time(data['dimstr_cont'].firstbox_time[0], timezone.utc)
@@ -72,7 +72,8 @@ def read_Lars_dimmings():
     #                    print("time_through", time_through)
                     filepath=rootdir+eachdir+"/SAV"+os.sep+file
 #                    print("reading", file) 
-                    data = readsav(filepath)
+                    data = readsav(filepath) #contains instrument, time, time_mag, dim_num, thresh, area_mm, area_px_total, area_mm_total, contour_length_pix, contour_x_coos, contour_y_coos, contour_x_coos_tot, countour_y_coos_tot, map_sizex, map_sizey, east_coos, west_coos, north_coos, south_coos
+#                    print(data)
     #                    print("east from file", data['dimstr3'].east_coos)
     #                print("len", len(data['dimstr3'].east_coos[0]))
     #                if len(data['dimstr3'].east_coos[0])>1:
@@ -103,31 +104,31 @@ def read_Lars_dimmings():
                             print("THRESH!", thresh, data)
                         if area<sum(data['dimstr3'].area_mm_total[0]):
                             area=sum(data['dimstr3'].area_mm_total[0])
-                            time_val=parse_time(data['dimstr3'].time, time_format="utime")
+                            #time_val=parse_time(data['dimstr3'].time, time_format="utime")
                             #print(time_val, data['dimstr3'].time)
     
     #                    print("north", north)
     #                    print("new north", data['dimstr3'].north_coos[0])
     #                    print("south", south)
     #                    print("new south", data['dimstr3'].south_coos[0])
-    
-                        if east>min(data['dimstr3'].east_coos[0]):
-    #                        print("east is smaller", east, data['dimstr3'].east_coos[0])
-                            east=min(data['dimstr3'].east_coos[0])
-                            
-                        if west<max(data['dimstr3'].west_coos[0]):
-    #                        print("west change", west, data['dimstr3'].west_coos[0])
-                            west=max(data['dimstr3'].west_coos[0])
-    
-    
-                        if south>min(data['dimstr3'].south_coos[0]):
-    #                        print("south change", south, data['dimstr3'].south_coos[0])
-                            south=min(data['dimstr3'].south_coos[0])
-                            
-                        if north<max(data['dimstr3'].north_coos[0]):
-    #                        print("north is smaller", north, data['dimstr3'].north_coos[0])
-                            north=max(data['dimstr3'].north_coos[0])
-                            
+#    
+#                        if east>min(data['dimstr3'].east_coos[0]):
+#    #                        print("east is smaller", east, data['dimstr3'].east_coos[0])
+#                            east=min(data['dimstr3'].east_coos[0])
+#                            
+#                        if west<max(data['dimstr3'].west_coos[0]):
+#    #                        print("west change", west, data['dimstr3'].west_coos[0])
+#                            west=max(data['dimstr3'].west_coos[0])
+#    
+#    
+#                        if south>min(data['dimstr3'].south_coos[0]):
+#    #                        print("south change", south, data['dimstr3'].south_coos[0])
+#                            south=min(data['dimstr3'].south_coos[0])
+#                            
+#                        if north<max(data['dimstr3'].north_coos[0]):
+#    #                        print("north is smaller", north, data['dimstr3'].north_coos[0])
+#                            north=max(data['dimstr3'].north_coos[0])
+#                            
     #                        print("area", data['dimstr3'].area_mm_total)
     #                        print("east", data['dimstr3'].east_coos, east)   
     #                        print("west", data['dimstr3'].west_coos, west)

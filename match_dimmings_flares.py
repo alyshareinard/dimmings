@@ -68,7 +68,15 @@ def match_dimmings_flares():
         print("target dimming", dimmings['time'][ind1], "NS: ", dim_ns, "EW: ", dim_ew)
         
         target_time.append(dimmings['time'][ind1])
-        target_loc.append([str(dim_ns)+str(dim_ew)])
+        if dim_ns<0:
+            NS="S"
+        else:
+            NS="N"
+        if dim_ew<0:
+            EW="E"
+        else:
+            EW="W"
+        target_loc.append([NS+str(int(abs(round(dim_ns))))+EW+str(int(abs(round(dim_ew))))])
 #    for dim in dimmings:
         #this is going to be totally inefficient
         possibilities=[]
@@ -158,22 +166,24 @@ def match_dimmings_flares():
     for index in range(len(target_time)): 
         print("  ")
         print("  ")
-        print("Target dimming")
-        print("Time: ", target_time[index])
-        print("Location: ", target_loc[index])
-        print(" ")
+        print("Target dimming:           ", target_time[index], target_loc[index][0])
+#        print("Time: ", target_time[index])
+#        print("Location: ", target_loc[index])
+#        print(" ")
         if match[index]!=None:
-            print("Best flare based on time")
-            print(xray_flares['location'][match[index]])
-            print(xray_flares['init_date'][match[index]])
+#            print("Best flare based on time")
+            if len(xray_flares['location'][match[index]])==6:
+                loc=xray_flares['location'][match[index]]
+            else: loc="no location"
+            print("Flare closest in time:    ", xray_flares['init_date'][match[index]], loc)
         else:
             print("No flare match")
             if match_dist[index]!=None:
                 print("What?? There's a problem here")
         if match_dist[index]!=None:
-            print("Best flare based on distance")
-            print(xray_flares['location'][match_dist[index]])
-            print(xray_flares['init_date'][match_dist[index]])
+            print("Flare closest in distance:", xray_flares['init_date'][match_dist[index]], xray_flares['location'][match_dist[index]])
+#            print(xray_flares['location'][match_dist[index]])
+#            print(xray_flares['init_date'][match_dist[index]])
         else:
             print("No flare match based on distance")           
             

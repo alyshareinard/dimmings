@@ -8,9 +8,24 @@ Created on Tue May  3 16:02:21 2016
 import sys
 from datetime import timedelta
 import math
+import os
+import pandas as pd
 #import read_Lars_dimmings
 
 sys.path.append('../common/')
+
+def read_hand_matches():
+    if os.sep=="/":
+        osdir=os.path.join("/Users", "alyshareinard", "Dropbox", "Work")
+    else:
+        osdir=os.path.join("C:"+os.sep+"Users", "alysha.reinard", "Documents")
+    file=os.path.join(osdir, "data", "Lars dimmings", "dim_flare_hand.txt")
+    names=["dim_name", "date", "start", "end", "peak", "loc", "flare_class", 
+    "flare_size", "station", "something", "AR", "LarAR"]
+    data=pd.read_csv(file, sep=" ", header=None, names=names)
+#    print(data)
+    return data
+
 
 def print_loc_diff(flare_loc, dim_ns, dim_ew):
     if len(flare_loc)==6 and flare_loc !="      ":
@@ -28,8 +43,10 @@ def print_loc_diff(flare_loc, dim_ns, dim_ew):
         return(None, None)
 
 def match_dimmings_flares():
-    dimmings=read_Lars_dimmings()
-    print(type(dimmings))
+    dimmings=read_Lars_alldim()
+    matches=read_hand_matches()
+    
+#    print(type(dimmings))
     (xray_flares, ha_flares)=get_flare_catalog(2013, 2014)
 #    print("!!!!", xray_flares['peak_time'])
     #first check to make sure there is some overlap in dates
@@ -60,14 +77,19 @@ def match_dimmings_flares():
     dist_loc=[]
     time_time=[]
     time_loc=[]
+    target_name=[]
+    print(xray_flares["init_date"])
+    
     for ind1 in range(len(dimmings['time'])):
         print("   ")
         print("   ")
         dim_ew=dimmings['mean_EW'][ind1]
         dim_ns=dimmings['mean_NS'][ind1]
-        print("target dimming", dimmings['time'][ind1], "NS: ", dim_ns, "EW: ", dim_ew)
+        print("target dimming", dimmings['dim_name'][ind1], dimmings['time'][ind1], "NS: ", dim_ns, "EW: ", dim_ew)
         
         target_time.append(dimmings['time'][ind1])
+        print("is this the target", dimmings['dim_name'][ind1])
+        target_name.append(dimmings['dim_name'][ind1])
         if dim_ns<0:
             NS="S"
         else:
@@ -162,11 +184,37 @@ def match_dimmings_flares():
     
 #            dist_time.append(xray_flares['init_date'][x])
 #          print(dim_ew, dim_ns, flare_loc, flare_ew, flare_ns)
+    print("  ")
+    print("  ")
+    
+    print("matches", matches["dim_name"][0:30])
+    print("target", target_name)    
     print("summary of all events:")
+    
+    ind2=0
+    diff=0
+    same=0
+    init=pd.to_datetime(xray_flares["init_date"])
+    print("what??", type(init))
     for index in range(len(target_time)): 
         print("  ")
         print("  ")
-        print("Target dimming:           ", target_time[index], target_loc[index][0])
+#        index+=1
+        
+#        ind2=index
+        if target_name[index][0:13]==matches["dim_name"][ind2][0:13]:
+            print("matches!")
+#        print("TARGET", target_name[index][0:13])
+#        print("MATCH", matches["dim_name"][ind2][0:13])
+        while target_name[index][0:13]!=matches["dim_name"][ind2][0:13]:
+            ind2=ind2+1 
+            print("target", target_name[index][0:13])
+            print("match", matches["dim_name"][ind2][0:13])
+
+        print("Target dimming:           ", target_name[index], target_time[index], target_loc[index][0])
+        print("Hand match:               ", matches["dim_name"][ind2], matches["start"][index], matches["loc"][index], matches["flare_class"][index], matches["flare_size"][index])
+        
+        
 #        print("Time: ", target_time[index])
 #        print("Location: ", target_loc[index])
 #        print(" ")
@@ -175,7 +223,7 @@ def match_dimmings_flares():
             if len(xray_flares['location'][match[index]])==6:
                 loc=xray_flares['location'][match[index]]
             else: loc="no location"
-            print("Flare closest in time:    ", xray_flares['init_date'][match[index]], loc)
+            print("Flare closest in time:    ", xray_flares['init_date'][match[index]], loc, xray_flares['xray_class'][match[index]], xray_flares['xray_size'][match[index]])
         else:
             print("No flare match")
             if match_dist[index]!=None:
@@ -185,8 +233,20 @@ def match_dimmings_flares():
 #            print(xray_flares['location'][match_dist[index]])
 #            print(xray_flares['init_date'][match_dist[index]])
         else:
-            print("No flare match based on distance")           
-            
+            print("No flare match based on distance")  
+        mat=matches["start"][index]
+        print(mat)
+        this_init=init[match[index]].dt.hour
+        print("type", type(this_init))
+        hhmm=this_init.hour#+str(init.dt.min)
+        print("!!!!!!!!!!!!!hhmm", hhmm)
+        if math.isnan(mat)==False and mat==hhmm:
+            print("SAME")
+            same+=1
+        else:
+            diff+=1
+    print("same: ", same)
+    print("diff: ", diff)
           
 match_dimmings_flares()
     

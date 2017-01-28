@@ -14,6 +14,59 @@ import pandas as pd
 
 sys.path.append('../common/')
 
+def is_nat(npdatetime):
+    try:
+        npdatetime.strftime('%x')
+        return False
+    except:
+        return True
+        
+def create_datetime2(ymd, hm):
+    date=[]
+    #unpack ymd and fix year
+
+    for item, ihm in zip(ymd, hm):
+#        print("len(date): ", len(date))
+        print("item", item)
+        if item=="  " or np.isnan(item)==True:
+            print("blank line")
+            date.append(None)
+            continue
+        
+        print(item)
+        
+#        print(datestr)
+        datestr=str(item)
+        year=int(datestr[0:2])
+        month=int(datestr[2:4])
+        day=int(datestr[4:6])
+
+        #fix two year dates without messing up 4 year dates
+        if year<70: 
+            year=year+2000
+        elif  year<100: 
+            year+=1900
+        
+        if math.isnan(ihm)==False:
+            hour=math.floor(ihm/100)
+            minute=math.floor(ihm-hour*100)
+
+            #now check to see if the time is past 2400 and adjust
+            if hour>=24:
+                hour-=24
+                day+=1
+                [day, month, year]=check_daymonth(day, month, year)
+            #print(day, month, year, hour, minute)
+            try:
+                date.append(datetime(year, month, day, hour, minute))
+#                print("here ", date[-1])
+                #print(datetime(year, month, day, hour, minute))
+            except:
+                date.append(None)
+        else:
+            date.append(None)
+    return date
+    
 def read_hand_matches():
     if os.sep=="/":
         osdir=os.path.join("/Users", "alyshareinard", "Dropbox", "Work")
@@ -23,6 +76,10 @@ def read_hand_matches():
     names=["dim_name", "date", "start", "end", "peak", "loc", "flare_class", 
     "flare_size", "station", "something", "AR", "LarAR"]
     data=pd.read_csv(file, sep=" ", header=None, names=names)
+
+    data["init_date"]=create_datetime2(data["date"], data["start"])
+    data["peak_date"]=create_datetime2(data["date"], data["peak"])
+    data["final_date"]=create_datetime2(data["date"], data["end"])    
 #    print(data)
     return data
 
@@ -44,7 +101,7 @@ def print_loc_diff(flare_loc, dim_ns, dim_ew):
 
 def match_dimmings_flares():
     dimmings=read_Lars_alldim()
-    matches=read_hand_matches()
+    hand_matches=read_hand_matches()
     
 #    print(type(dimmings))
     (xray_flares, ha_flares)=get_flare_catalog(2013, 2014)
@@ -78,7 +135,7 @@ def match_dimmings_flares():
     time_time=[]
     time_loc=[]
     target_name=[]
-    print(xray_flares["init_date"])
+#    print(xray_flares["init_date"])
     
     for ind1 in range(len(dimmings['time'])):
         print("   ")
@@ -88,7 +145,7 @@ def match_dimmings_flares():
         print("target dimming", dimmings['dim_name'][ind1], dimmings['time'][ind1], "NS: ", dim_ns, "EW: ", dim_ew)
         
         target_time.append(dimmings['time'][ind1])
-        print("is this the target", dimmings['dim_name'][ind1])
+#        print("is this the target", dimmings['dim_name'][ind1])
         target_name.append(dimmings['dim_name'][ind1])
         if dim_ns<0:
             NS="S"
@@ -131,7 +188,7 @@ def match_dimmings_flares():
             (ns_diff, ew_diff)=print_loc_diff(flare_loc, dim_ns, dim_ew)
             print("time diff", dimtime - xray_flares['init_date'][x])
             
-            match.append(possibilities)
+            match.append(possibilities[0])
             match_dist.append(None)
         elif len(possibilities)>1:
             print("possible flare summary:")
@@ -176,6 +233,7 @@ def match_dimmings_flares():
             if min(dist)==9999: shortest_dist=None
             print("shortest_time", shortest_time)
             print("shortest_dist", shortest_dist)
+            print(possibilities[shortest_time])
             match.append(possibilities[shortest_time])
             if shortest_dist==None or shortest_dist==shortest_time:
                 match_dist.append(None)
@@ -187,32 +245,37 @@ def match_dimmings_flares():
     print("  ")
     print("  ")
     
-    print("matches", matches["dim_name"][0:30])
+#    print("matches", hand_matches["dim_name"][0:30])
     print("target", target_name)    
     print("summary of all events:")
     
     ind2=0
     diff=0
+    hand_noauto=0
+    auto_nohand=0
     same=0
-    init=pd.to_datetime(xray_flares["init_date"])
-    print("what??", type(init))
+    null=0
+#    init=pd.to_datetime(xray_flares["init_date"])
+#    print("what??", type(init))
     for index in range(len(target_time)): 
         print("  ")
         print("  ")
 #        index+=1
-        
+
 #        ind2=index
-        if target_name[index][0:13]==matches["dim_name"][ind2][0:13]:
+        if target_name[index][0:13]==hand_matches["dim_name"][ind2][0:13]:
             print("matches!")
 #        print("TARGET", target_name[index][0:13])
 #        print("MATCH", matches["dim_name"][ind2][0:13])
-        while target_name[index][0:13]!=matches["dim_name"][ind2][0:13]:
+        while target_name[index][0:13]!=hand_matches["dim_name"][ind2][0:13]:
             ind2=ind2+1 
             print("target", target_name[index][0:13])
-            print("match", matches["dim_name"][ind2][0:13])
+            print("match", hand_matches["dim_name"][ind2][0:13])
 
         print("Target dimming:           ", target_name[index], target_time[index], target_loc[index][0])
-        print("Hand match:               ", matches["dim_name"][ind2], matches["start"][index], matches["loc"][index], matches["flare_class"][index], matches["flare_size"][index])
+
+        
+        print("Hand match:               ", hand_matches["dim_name"][ind2], hand_matches["start"][index], hand_matches["loc"][index], hand_matches["flare_class"][index], hand_matches["flare_size"][index])
         
         
 #        print("Time: ", target_time[index])
@@ -223,7 +286,7 @@ def match_dimmings_flares():
             if len(xray_flares['location'][match[index]])==6:
                 loc=xray_flares['location'][match[index]]
             else: loc="no location"
-            print("Flare closest in time:    ", xray_flares['init_date'][match[index]], loc, xray_flares['xray_class'][match[index]], xray_flares['xray_size'][match[index]])
+            print("Flare closest in time:    ", xray_flares['init_date'][match[index]], loc)#, xray_flares['xray_class'][match[index]], xray_flares['xray_size'][match[index]])
         else:
             print("No flare match")
             if match_dist[index]!=None:
@@ -234,18 +297,34 @@ def match_dimmings_flares():
 #            print(xray_flares['init_date'][match_dist[index]])
         else:
             print("No flare match based on distance")  
-        mat=matches["start"][index]
-        print(mat)
-        this_init=init[match[index]].dt.hour
-        print("type", type(this_init))
-        hhmm=this_init.hour#+str(init.dt.min)
-        print("!!!!!!!!!!!!!hhmm", hhmm)
-        if math.isnan(mat)==False and mat==hhmm:
-            print("SAME")
-            same+=1
-        else:
-            diff+=1
-    print("same: ", same)
+        mat=hand_matches["init_date"][ind2]
+
+        
+        if is_nat(mat)==False and match[index]!=None:
+            print("match index", match[index])
+            init=xray_flares["init_date"][match[index]]
+
+            print("auto match flare: ", init)#, type(init))
+            print("hand match flare: ", mat)#, type(mat))
+#            init=init.values
+            
+            if init==mat:
+                print("SAME")
+                same+=1
+            else:
+                diff+=1
+        elif is_nat(mat)==True and match[index]!=None:
+            print("automated match but no hand match")
+            auto_nohand+=1
+        elif is_nat(mat)==False and match[index]==None:
+            print("hand match but no automated match")
+            hand_noauto+=1
+        elif is_nat(mat)==True and match[index]==None:
+            null+=1
+    print("same flare: ", same)
+    print("same null: ", null)
+    print("hand match but no automated match", hand_noauto)
+    print("automated match but no hand match", auto_nohand)
     print("diff: ", diff)
           
 match_dimmings_flares()

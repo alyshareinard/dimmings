@@ -9,6 +9,7 @@ import sys
 from datetime import timedelta
 import math
 import os
+import numpy as np
 import pandas as pd
 #import read_Lars_dimmings
 
@@ -286,7 +287,8 @@ def match_dimmings_flares():
             if len(xray_flares['location'][match[index]])==6:
                 loc=xray_flares['location'][match[index]]
             else: loc="no location"
-            print("Flare closest in time:    ", xray_flares['init_date'][match[index]], loc)#, xray_flares['xray_class'][match[index]], xray_flares['xray_size'][match[index]])
+            xraysize=xray_flares['xray_class'][match[index]]+str(xray_flares['xray_size'][match[index]])
+            print("Flare closest in time:    ", xray_flares['init_date'][match[index]], loc, xraysize)#, xray_flares['xray_class'][match[index]], xray_flares['xray_size'][match[index]])
         else:
             print("No flare match")
             if match_dist[index]!=None:
@@ -312,6 +314,7 @@ def match_dimmings_flares():
                 print("SAME")
                 same+=1
             else:
+                print("DIFFERENT!!")
                 diff+=1
         elif is_nat(mat)==True and match[index]!=None:
             print("automated match but no hand match")

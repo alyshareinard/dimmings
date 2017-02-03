@@ -40,9 +40,9 @@ def read_Lars_alldim():
         if "_alldim_props" in file:
             print("reading", file)
             count+=1
-            print(count)
-            if count>=30:
-                print("first 30 dimmings returned for testing")
+#            print(count)
+            if count>=300:
+                print("first 300 dimmings returned for testing")
                 break
             data=readsav(rootdir+file) #contains dim_name, area_mm, time, euv_min, bz_mean, absbz_mean, bz_max, north_coos, south_coos, east_coos, west_coos
 #            print(data)
@@ -51,7 +51,7 @@ def read_Lars_alldim():
             except:
                 data=data['dimall']      
             name=data.dim_name[0].decode('utf-8')
-            print("name", name)#.decode('utf-8'))
+#            print("name", name)#.decode('utf-8'))
             area=data.area_mm[0][0]
             east=data.east_coos[0][0]
             west=data.west_coos[0][0]
@@ -61,7 +61,7 @@ def read_Lars_alldim():
 #                    print(time_val, data['dimstr3'].time)
 
    
-            print("name try", name)
+#            print("name try", name)
             dim_name.append(name)            
             area_mm.append(area)
             east_coos.append(east)

@@ -28,13 +28,13 @@ def create_datetime2(ymd, hm):
 
     for item, ihm in zip(ymd, hm):
 #        print("len(date): ", len(date))
-        print("item", item)
+#        print("item", item)
         if item=="  " or np.isnan(item)==True:
-            print("blank line")
+#            print("blank line")
             date.append(None)
             continue
         
-        print(item)
+#        print(item)
         
 #        print(datestr)
         datestr=str(item)
@@ -169,7 +169,16 @@ def match_dimmings_flares():
 #            print("flare", ind1, ind2, flaretime)
 
             if flaretime !=None and flaretime<(dimtime+timediff) and flaretime>(dimtime-timediff):
-                possibilities.append(ind2)
+                #now check location
+                flare_loc=xray_flares['location'][ind2]
+                (ns_diff, ew_diff)=print_loc_diff(flare_loc, dim_ns, dim_ew)
+                if ns_diff !=None:      
+                    dist=math.sqrt(ns_diff*ns_diff+ew_diff*ew_diff)
+                else:
+                    dist=None
+#                print("!!!!DIST", dist)
+                if dist == None or dist<30:
+                    possibilities.append(ind2)
 #        print("possibilities", possibilities)
 #        print("dimming location EW, NS", dimmings['mean_EW'][ind1], dimmings['mean_NS'][ind1])
 #        print("flare location", [xray_flares['location'][x] for x in possibilities])
@@ -188,9 +197,11 @@ def match_dimmings_flares():
             print("flare size", xray_flares['xray_class'][x], xray_flares['xray_size'][x])
             (ns_diff, ew_diff)=print_loc_diff(flare_loc, dim_ns, dim_ew)
             print("time diff", dimtime - xray_flares['init_date'][x])
-            
+            if ns_diff !=None:      
+                dist=math.sqrt(ns_diff*ns_diff+ew_diff*ew_diff) 
+            else: dist=None
             match.append(possibilities[0])
-            match_dist.append(None)
+            match_dist.append(possibilities[0])
         elif len(possibilities)>1:
             print("possible flare summary:")
             ns_diff=[]
@@ -229,6 +240,9 @@ def match_dimmings_flares():
             print("dist", dist)
             if len(dist)>0: 
                 shortest_dist=dist.index(min(dist))
+                #require within 30 degrees
+                if shortest_dist>30:
+                    shortest_dist=None
             else:
                 shortest_dist=None
             if min(dist)==9999: shortest_dist=None
@@ -264,19 +278,20 @@ def match_dimmings_flares():
 #        index+=1
 
 #        ind2=index
-        if target_name[index][0:13]==hand_matches["dim_name"][ind2][0:13]:
-            print("matches!")
+#        if target_name[index][0:13]==hand_matches["dim_name"][ind2][0:13]:
+#            print("matches!")
 #        print("TARGET", target_name[index][0:13])
 #        print("MATCH", matches["dim_name"][ind2][0:13])
+        print("testing...", index, ind2)
         while target_name[index][0:13]!=hand_matches["dim_name"][ind2][0:13]:
             ind2=ind2+1 
-            print("target", target_name[index][0:13])
-            print("match", hand_matches["dim_name"][ind2][0:13])
+#            print("target", target_name[index][0:13])
+#            print("match", hand_matches["dim_name"][ind2][0:13])
 
-        print("Target dimming:           ", target_name[index], target_time[index], target_loc[index][0])
+        print("Target dimming:", target_name[index], target_time[index], target_loc[index][0])
 
         
-        print("Hand match:               ", hand_matches["dim_name"][ind2], hand_matches["start"][index], hand_matches["loc"][index], hand_matches["flare_class"][index], hand_matches["flare_size"][index])
+#        print("Hand match:               ", hand_matches["dim_name"][ind2], hand_matches["start"][index], hand_matches["loc"][index], hand_matches["flare_class"][index], hand_matches["flare_size"][index])
         
         
 #        print("Time: ", target_time[index])
@@ -287,13 +302,14 @@ def match_dimmings_flares():
             if len(xray_flares['location'][match[index]])==6:
                 loc=xray_flares['location'][match[index]]
             else: loc="no location"
-            xraysize=xray_flares['xray_class'][match[index]]+str(xray_flares['xray_size'][match[index]])
-            print("Flare closest in time:    ", xray_flares['init_date'][match[index]], loc, xraysize)#, xray_flares['xray_class'][match[index]], xray_flares['xray_size'][match[index]])
+            xraysize=xray_flares['xray_class'][match[index]]+str(xray_flares['xray_size'][match[index]]/10.)
+            print("Flare closest in time:       ", xray_flares['init_date'][match[index]], loc, xraysize)#, xray_flares['xray_class'][match[index]], xray_flares['xray_size'][match[index]])
         else:
             print("No flare match")
             if match_dist[index]!=None:
                 print("What?? There's a problem here")
         if match_dist[index]!=None:
+#            print(match_dist[index])
             print("Flare closest in distance:", xray_flares['init_date'][match_dist[index]], xray_flares['location'][match_dist[index]])
 #            print(xray_flares['location'][match_dist[index]])
 #            print(xray_flares['init_date'][match_dist[index]])
@@ -303,11 +319,16 @@ def match_dimmings_flares():
 
         
         if is_nat(mat)==False and match[index]!=None:
-            print("match index", match[index])
+#            print("match index", match[index])
             init=xray_flares["init_date"][match[index]]
+            hand_loc=hand_matches["loc"][index]
+            print("hand_loc", hand_loc)
+            if pd.isnull(hand_loc):
+                hand_loc="no location"
 
-            print("auto match flare: ", init)#, type(init))
-            print("hand match flare: ", mat)#, type(mat))
+            hand_flare=hand_matches["flare_class"][index]+str(hand_matches["flare_size"][index]/10.)
+            print("auto match flare:            ", init, loc, xraysize)#, type(init))
+            print("hand match flare:            ", mat, hand_loc, hand_flare)#, type(mat))
 #            init=init.values
             
             if init==mat:
@@ -323,6 +344,7 @@ def match_dimmings_flares():
             print("hand match but no automated match")
             hand_noauto+=1
         elif is_nat(mat)==True and match[index]==None:
+            print("no hand or auto match")
             null+=1
     print("same flare: ", same)
     print("same null: ", null)

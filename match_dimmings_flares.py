@@ -282,7 +282,9 @@ def match_dimmings_flares():
 #            print("matches!")
 #        print("TARGET", target_name[index][0:13])
 #        print("MATCH", matches["dim_name"][ind2][0:13])
-        print("testing...", index, ind2)
+#        print("testing...", index, ind2)
+#        print(target_name[index][0:13])
+#        print(hand_matches["dim_name"][ind2][0:13])
         while target_name[index][0:13]!=hand_matches["dim_name"][ind2][0:13]:
             ind2=ind2+1 
 #            print("target", target_name[index][0:13])
@@ -322,7 +324,7 @@ def match_dimmings_flares():
 #            print("match index", match[index])
             init=xray_flares["init_date"][match[index]]
             hand_loc=hand_matches["loc"][index]
-            print("hand_loc", hand_loc)
+#            print("hand_loc", hand_loc)
             if pd.isnull(hand_loc):
                 hand_loc="no location"
 
@@ -346,6 +348,10 @@ def match_dimmings_flares():
         elif is_nat(mat)==True and match[index]==None:
             print("no hand or auto match")
             null+=1
+            
+    print(" ")
+    print(" ")
+    print("Overall statistics")
     print("same flare: ", same)
     print("same null: ", null)
     print("hand match but no automated match", hand_noauto)

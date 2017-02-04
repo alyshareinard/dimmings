@@ -41,8 +41,8 @@ def read_Lars_alldim():
             print("reading", file)
             count+=1
 #            print(count)
-            if count>=300:
-                print("first 300 dimmings returned for testing")
+            if count>=30:
+                print("first 30 dimmings returned for testing")
                 break
             data=readsav(rootdir+file) #contains dim_name, area_mm, time, euv_min, bz_mean, absbz_mean, bz_max, north_coos, south_coos, east_coos, west_coos
 #            print(data)

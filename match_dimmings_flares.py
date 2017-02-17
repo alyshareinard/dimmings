@@ -15,6 +15,39 @@ import pandas as pd
 
 sys.path.append('../common/')
 
+def find_mag_bigger(mag1, mag2):
+    """determines if mag1 is bigger than mag2 -- used for flare sizes B-X"""
+
+    if mag1==mag2:
+        return False
+    if mag1=='B' or mag2=='X':
+        return False
+    if mag1=='X' or mag2=='B':
+        return True
+    #now we're left with Cs and Ms, so repeat
+    if mag1=='C' or mag2=="M":
+        return False
+    else:
+        return True
+
+
+def find_largest_flare(fl_mag, fl_size):
+
+    biggest_mag='B'
+    biggest_size=1.0
+    biggest_index=-1
+    for index in range(len(fl_mag)):
+        if find_mag_bigger(fl_mag[index], biggest_mag):
+            biggest_index=index
+            biggest_size=fl_size[index]
+            biggest_mag=fl_mag[index]            
+        if fl_mag[index]==biggest_mag:
+            if fl_size[index]>biggest_size:
+                biggest_index=index
+                biggest_size=fl_size[index]
+                biggest_mag=fl_mag[index]
+    return biggest_index
+
 def is_nat(npdatetime):
     try:
         npdatetime.strftime('%x')
@@ -180,6 +213,7 @@ def match_dimmings_flares():
     #let's start with stepping through the dimmings
     match=[]
     match_dist=[]
+    match_big=[]
     target_time=[]
     target_loc=[]
     dist_time=[]
@@ -237,6 +271,7 @@ def match_dimmings_flares():
             print("no matching flares")
             match.append(None)
             match_dist.append(None)
+            match_big.append(None)
         elif len(possibilities)==1:
             print("one matching flare")
             
@@ -253,11 +288,14 @@ def match_dimmings_flares():
             else: dist=None
             match.append(possibilities[0])
             match_dist.append(possibilities[0])
+            match_big.append(possibilities[0])
         elif len(possibilities)>1:
             print("possible flare summary:")
             ns_diff=[]
             ew_diff=[]
             time_diff=[]
+            fl_mag=[]
+            fl_size=[]
 
             for x in possibilities:
                 flare_loc=xray_flares['location'][x]
@@ -266,6 +304,7 @@ def match_dimmings_flares():
                 print("NOAA AR", xray_flares["NOAA_AR"][x])
                 print("flare time", xray_flares['init_date'][x])#, xray_flares['peak_date'][x], xray_flares['final_date'][x])
                 print("flare size", xray_flares['xray_class'][x], xray_flares['xray_size'][x])
+                
                 (ns_d, ew_d)=print_loc_diff(flare_loc, dim_ns, dim_ew)
                 #                print("len", len(flare_loc), flare_loc)
                 t_diff=(dimtime - xray_flares['init_date'][x])
@@ -275,7 +314,11 @@ def match_dimmings_flares():
                 print("time diff", dimtime - xray_flares['init_date'][x])
         
                 print("  ")
-          
+                fl_mag.append(xray_flares['xray_class'][x])
+                fl_size.append(xray_flares['xray_size'][x])
+                
+            biggest=find_largest_flare(fl_mag, fl_size)
+            match_big.append(possibilities[biggest])
             print("event summary")
             print("NS diffs: ", ns_diff)
             print("EW diffs: ", ew_diff)
@@ -321,6 +364,7 @@ def match_dimmings_flares():
     auto_nohand=0
     same=0
     null=0
+    confidence=[]
 #    init=pd.to_datetime(xray_flares["init_date"])
 #    print("what??", type(init))
     for index in range(len(target_time)): 
@@ -357,6 +401,8 @@ def match_dimmings_flares():
             else: loc="no location"
             xraysize=xray_flares['xray_class'][match[index]]+str(xray_flares['xray_size'][match[index]]/10.)
             print("Flare closest in time:       ", xray_flares['init_date'][match[index]], loc, xraysize)#, xray_flares['xray_class'][match[index]], xray_flares['xray_size'][match[index]])
+            print("Flare largest in size:    ", xray_flares['init_date'][match_big[index]], xray_flares['location'][match_big[index]], xray_flares['xray_class'][match_big[index]], xray_flares['xray_size'][match_big[index]]/10.)
+
         else:
             print("No flare match")
             if match_dist[index]!=None:
@@ -364,12 +410,21 @@ def match_dimmings_flares():
         if match_dist[index]!=None:
 #            print(match_dist[index])
             print("Flare closest in distance:", xray_flares['init_date'][match_dist[index]], xray_flares['location'][match_dist[index]])
-#            print(xray_flares['location'][match_dist[index]])
+
+            #            print(xray_flares['location'][match_dist[index]])
 #            print(xray_flares['init_date'][match_dist[index]])
         else:
             print("No flare match based on distance")  
         mat=hand_matches["init_date"][ind2]
 
+        if match[index]==None:
+            confidence.append(-1)
+        elif len(xray_flares['location'][match[index]])!=6:
+            confidence.append(0.5)
+        else:
+            confidence.append(1.0)
+            
+        print("CONFIDENCE LEVEL", confidence[-1])
         
         if is_nat(mat)==False and match[index]!=None:
 #            print("match index", match[index])
@@ -681,7 +736,7 @@ def match_dimmings_CME():
     print("automated match but no hand match", auto_nohand)
     print("diff: ", diff)
           
-match_dimmings_CME()
-#match_dimmings_flares()
+#match_dimmings_CME()
+match_dimmings_flares()
     
     

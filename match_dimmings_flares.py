@@ -32,7 +32,9 @@ def find_mag_bigger(mag1, mag2):
 
 
 def find_largest_flare(fl_mag, fl_size):
-
+    """from lists of flare magnitude and flare size the program returns the 
+    index of the largest flare.  This works for lists of any size"""
+    
     biggest_mag='B'
     biggest_size=1.0
     biggest_index=-1
@@ -49,6 +51,8 @@ def find_largest_flare(fl_mag, fl_size):
     return biggest_index
 
 def is_nat(npdatetime):
+    """program to determine if a date is not a time -- 
+    for picking out missing/fill values"""
     try:
         npdatetime.strftime('%x')
         return False
@@ -394,13 +398,13 @@ def match_dimmings_flares():
 #        print("Time: ", target_time[index])
 #        print("Location: ", target_loc[index])
 #        print(" ")
-        if match[index]!=None:
+        if match_time[index]!=None:
 #            print("Best flare based on time")
-            if len(xray_flares['location'][match[index]])==6:
-                loc=xray_flares['location'][match[index]]
+            if len(xray_flares['location'][match_time[index]])==6:
+                loc=xray_flares['location'][match_time[index]]
             else: loc="no location"
-            xraysize=xray_flares['xray_class'][match[index]]+str(xray_flares['xray_size'][match[index]]/10.)
-            print("Flare closest in time:       ", xray_flares['init_date'][match[index]], loc, xraysize)#, xray_flares['xray_class'][match[index]], xray_flares['xray_size'][match[index]])
+            xraysize=xray_flares['xray_class'][match_time[index]]+str(xray_flares['xray_size'][match_time[index]]/10.)
+            print("Flare closest in time:       ", xray_flares['init_date'][match_time[index]], loc, xraysize)#, xray_flares['xray_class'][match_time[index]], xray_flares['xray_size'][match_time[index]])
             print("Flare largest in size:    ", xray_flares['init_date'][match_big[index]], xray_flares['location'][match_big[index]], xray_flares['xray_class'][match_big[index]], xray_flares['xray_size'][match_big[index]]/10.)
 
         else:
@@ -417,18 +421,26 @@ def match_dimmings_flares():
             print("No flare match based on distance")  
         mat=hand_matches["init_date"][ind2]
 
-        if match[index]==None:
-            confidence.append(-1)
-        elif len(xray_flares['location'][match[index]])!=6:
-            confidence.append(0.5)
-        else:
-            confidence.append(1.0)
+
+
+        #determine confidence level
+        if match_time[index]==None:
+            confidence.append(-1)  #no match/fill val of -1 for confidence level
+        else:  #here we calculate the confidence
+            conf=1.0 #start with high confidence
+            if match_big[index]!=match_time[index]:
+                conf=conf-0.1  #small drop in confidence if largest flare is not the same as the flare closest in time
+            if len(xray_flares['location'][match_time[index]])!=6:
+                conf=conf-0.5  #large drop in confidence if there is no flare location
+            elif match_dist[index]!=match_time[index]:
+                conf=conf-0.1  #smaller drop if closest flare in time and closest in distance are not the same
+            confidence.append(conf)
             
         print("CONFIDENCE LEVEL", confidence[-1])
         
-        if is_nat(mat)==False and match[index]!=None:
-#            print("match index", match[index])
-            init=xray_flares["init_date"][match[index]]
+        if is_nat(mat)==False and match_time[index]!=None:
+#            print("match index", match_time[index])
+            init=xray_flares["init_date"][match_time[index]]
             hand_loc=hand_matches["loc"][index]
 #            print("hand_loc", hand_loc)
             if pd.isnull(hand_loc):
@@ -445,13 +457,13 @@ def match_dimmings_flares():
             else:
                 print("DIFFERENT!!")
                 diff+=1
-        elif is_nat(mat)==True and match[index]!=None:
+        elif is_nat(mat)==True and match_time[index]!=None:
             print("automated match but no hand match")
             auto_nohand+=1
-        elif is_nat(mat)==False and match[index]==None:
+        elif is_nat(mat)==False and match_time[index]==None:
             print("hand match but no automated match")
             hand_noauto+=1
-        elif is_nat(mat)==True and match[index]==None:
+        elif is_nat(mat)==True and match_time[index]==None:
             print("no hand or auto match")
             null+=1
             
@@ -676,19 +688,19 @@ def match_dimmings_CME():
 #        print("Time: ", target_time[index])
 #        print("Location: ", target_loc[index])
 #        print(" ")
-        if match[index]!=None:
+        if match_time[index]!=None:
 #            print("Best flare based on time")
 
-#            pa=cmes['pa'][match[index]]
+#            pa=cmes['pa'][match_time[index]]
 
-            print("CME closest in time:       ", cmes['date'][match[index]], cmes['PA'][match[index]], cmes['width'][match[index]])#, xraysize)#, xray_flares['xray_class'][match[index]], xray_flares['xray_size'][match[index]])
+            print("CME closest in time:       ", cmes['date'][match_time[index]], cmes['PA'][match_time[index]], cmes['width'][match_time[index]])#, xraysize)#, xray_flares['xray_class'][match_time[index]], xray_flares['xray_size'][match_time[index]])
         else:
             print("No cme match")
             if match_dist[index]!=None:
                 print("What?? There's a problem here")
         if match_dist[index]!=None:
 #            print(match_dist[index])
-            print("CME closest in distance:   ", cmes['date'][match_dist[index]], cmes['PA'][match_dist[index]], cmes['width'][match[index]])
+            print("CME closest in distance:   ", cmes['date'][match_dist[index]], cmes['PA'][match_dist[index]], cmes['width'][match_time[index]])
 #            print(xray_flares['location'][match_dist[index]])
 #            print(xray_flares['init_date'][match_dist[index]])
         else:
@@ -696,11 +708,11 @@ def match_dimmings_CME():
         mat=hand_matches["date"][ind2]
 
 #        print("mat", mat)
-#        print("match[index]", match[index])
-        if is_nat(mat)==False and match[index]!=None:
-#            print("match index", match[index])
-            init=cmes["date"][match[index]]
-            cme_PA=cmes["PA"][match[index]]
+#        print("match_time[index]", match_time[index])
+        if is_nat(mat)==False and match_time[index]!=None:
+#            print("match index", match_time[index])
+            init=cmes["date"][match_time[index]]
+            cme_PA=cmes["PA"][match_time[index]]
             hand_PA=hand_matches["PA"][index]
 #            print("hand_loc", hand_loc)
             if pd.isnull(hand_PA):
@@ -717,13 +729,13 @@ def match_dimmings_CME():
             else:
                 print("DIFFERENT!!")
                 diff+=1
-        elif is_nat(mat)==True and match[index]!=None:
+        elif is_nat(mat)==True and match_time[index]!=None:
             print("automated match but no hand match")
             auto_nohand+=1
-        elif is_nat(mat)==False and match[index]==None:
+        elif is_nat(mat)==False and match_time[index]==None:
             print("hand match but no automated match")
             hand_noauto+=1
-        elif is_nat(mat)==True and match[index]==None:
+        elif is_nat(mat)==True and match_time[index]==None:
             print("no hand or auto match")
             null+=1
             

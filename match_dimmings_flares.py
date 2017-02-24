@@ -45,24 +45,24 @@ def calc_overall_stats(best, conf, mat, xray_flares, hand_matches):
             if pd.isnull(hand_loc):
                 hand_loc="no location"
 
-            print("auto match flare:            ", best_init, best_loc, best_xraysize)#, type(init))
-            print("hand match flare:            ", manual, hand_loc, hand_flare)#, type(mat))
+#            print("auto match flare:            ", best_init, best_loc, best_xraysize)#, type(init))
+#            print("hand match flare:            ", manual, hand_loc, hand_flare)#, type(mat))
 #            init=init.values
             
             if best_init==hand_init:
-                print("SAME")
+#                print("SAME")
                 same+=1
             else:
-                print("DIFFERENT!!")
+#                print("DIFFERENT!!")
                 diff+=1
         elif is_nat(hand_init)==True and auto!=None:
-            print("automated match but no hand match")
+#            print("automated match but no hand match")
             auto_nohand+=1
         elif is_nat(hand_init)==False and auto==None:
-            print("hand match but no automated match")
+#            print("hand match but no automated match")
             hand_noauto+=1
         elif is_nat(hand_init)==True and auto==None:
-            print("no hand or auto match")
+#            print("no hand or auto match")
             null+=1
     return ([same, diff, auto_nohand, hand_noauto, null])
 
@@ -275,7 +275,8 @@ def read_hand_cmes():
 
 
 def print_loc_diff(flare_loc, dim_ns, dim_ew):
-    if flare_loc !="":   #!!!!!!!!!!!!!!!!
+#    print("!!!!!!!!!!!!!!!!!!!!!flare_loc", flare_loc)
+    if flare_loc !=None:   
         ns=int(flare_loc[1:3])
         if flare_loc[0]=="S": ns=-ns
         ew=int(flare_loc[4:6])
@@ -283,10 +284,10 @@ def print_loc_diff(flare_loc, dim_ns, dim_ew):
       
         ns_diff=ns-dim_ns
         ew_diff=ew-dim_ew
-        print("ns_diff, ew_diff", ns_diff, ew_diff)
+#        print("ns_diff, ew_diff", ns_diff, ew_diff)
         return (ns_diff, ew_diff)
     else:
-        print("no flare location")
+#        print("no flare location")
         return(None, None)
 
 def match_dimmings_flares():
@@ -328,7 +329,7 @@ def match_dimmings_flares():
         print("   ")
         dim_ew=dimmings['mean_EW'][ind1]
         dim_ns=dimmings['mean_NS'][ind1]
-        print("target dimming", dimmings['dim_name'][ind1], dimmings['time'][ind1], "NS: ", dim_ns, "EW: ", dim_ew)
+#        print("target dimming", dimmings['dim_name'][ind1], dimmings['time'][ind1], "NS: ", dim_ns, "EW: ", dim_ew)
         
         target_time.append(dimmings['time'][ind1])
 #        print("is this the target", dimmings['dim_name'][ind1])
@@ -356,33 +357,35 @@ def match_dimmings_flares():
             if flaretime !=None and flaretime<(dimtime+timediff) and flaretime>(dimtime-timediff):
                 #now check location
                 flare_loc=xray_flares['location'][ind2]
+#                print("flare loc", flare_loc)
                 (ns_diff, ew_diff)=print_loc_diff(flare_loc, dim_ns, dim_ew)
                 if ns_diff !=None:      
                     dist=math.sqrt(ns_diff*ns_diff+ew_diff*ew_diff)
                 else:
                     dist=None
-#                print("!!!!DIST", dist)
+#                print("dist!!!!!", dist)
+#               take all possiblities with no location or a location within 30 degrees
                 if dist == None or dist<30:
                     possibilities.append(ind2)
 #        print("possibilities", possibilities)
 #        print("dimming location EW, NS", dimmings['mean_EW'][ind1], dimmings['mean_NS'][ind1])
 #        print("flare location", [xray_flares['location'][x] for x in possibilities])
         if len(possibilities)==0:
-            print("no matching flares")
+#            print("no matching flares")
             match_time.append(None)
             match_dist.append(None)
             match_big.append(None)
         elif len(possibilities)==1:
-            print("one matching flare")
+#            print("one matching flare")
             
             x=possibilities[0]
             flare_loc=xray_flares['location'][x]
-            print("flare loc", flare_loc)
-            print("NOAA AR", xray_flares["NOAA_AR"][x])
-            print("flare time", xray_flares['init_date'][x])#, xray_flares['peak_date'][x], xray_flares['final_date'][x])
-            print("flare size", xray_flares['xray_class'][x], xray_flares['xray_size'][x])
+#            print("flare loc", flare_loc)
+#            print("NOAA AR", xray_flares["NOAA_AR"][x])
+#            print("flare time", xray_flares['init_date'][x])#, xray_flares['peak_date'][x], xray_flares['final_date'][x])
+#            print("flare size", xray_flares['xray_class'][x], xray_flares['xray_size'][x])
             (ns_diff, ew_diff)=print_loc_diff(flare_loc, dim_ns, dim_ew)
-            print("time diff", dimtime - xray_flares['init_date'][x])
+#            print("time diff", dimtime - xray_flares['init_date'][x])
             if ns_diff !=None:      
                 dist=math.sqrt(ns_diff*ns_diff+ew_diff*ew_diff) 
             else: dist=None
@@ -390,7 +393,7 @@ def match_dimmings_flares():
             match_dist.append(possibilities[0])
             match_big.append(possibilities[0])
         elif len(possibilities)>1:
-            print("possible flare summary:")
+#            print("possible flare summary:")
             ns_diff=[]
             ew_diff=[]
             time_diff=[]
@@ -400,10 +403,10 @@ def match_dimmings_flares():
             for x in possibilities:
                 flare_loc=xray_flares['location'][x]
 
-                print("flare loc", flare_loc)
-                print("NOAA AR", xray_flares["NOAA_AR"][x])
-                print("flare time", xray_flares['init_date'][x])#, xray_flares['peak_date'][x], xray_flares['final_date'][x])
-                print("flare size", xray_flares['xray_class'][x], xray_flares['xray_size'][x])
+##                print("flare loc", flare_loc)
+ #               print("NOAA AR", xray_flares["NOAA_AR"][x])
+  #              print("flare time", xray_flares['init_date'][x])#, xray_flares['peak_date'][x], xray_flares['final_date'][x])
+   #             print("flare size", xray_flares['xray_class'][x], xray_flares['xray_size'][x])
                 
                 (ns_d, ew_d)=print_loc_diff(flare_loc, dim_ns, dim_ew)
                 #                print("len", len(flare_loc), flare_loc)
@@ -411,9 +414,9 @@ def match_dimmings_flares():
                 time_diff.append(round((t_diff.days*86400+t_diff.seconds)/60./60., 2))
                 ns_diff.append(ns_d)
                 ew_diff.append(ew_d)
-                print("time diff", dimtime - xray_flares['init_date'][x])
+ #               print("time diff", dimtime - xray_flares['init_date'][x])
         
-                print("  ")
+#                print("  ")
                 fl_mag.append(xray_flares['xray_class'][x])
                 fl_size.append(xray_flares['xray_size'][x])
                 
@@ -463,7 +466,7 @@ def match_dimmings_flares():
     auto_nohand=0
     same=0
     null=0
-    confidence=[]
+    conf=[]
     auto=[]
     mat=[]
 
@@ -491,15 +494,13 @@ def match_dimmings_flares():
         
         mat.append(ind2)
 
-        (best, conf)=determine_conf(match_time[index], match_big[index], match_dist[index], target_time[index], xray_flares)
+        (best, confidence)=determine_conf(match_time[index], match_big[index], match_dist[index], target_time[index], xray_flares)
 
-        confidence.append(conf)
+        conf.append(confidence)
         auto.append(best)
-    [same, diff, auto_nohand, hand_noauto, null] = calc_overall_stats(auto, confidence, mat, xray_flares, hand_matches)
+    [same, diff, auto_nohand, hand_noauto, null] = calc_overall_stats(auto, conf, mat, xray_flares, hand_matches)
 
             
-    #make a location mask
-    is_location=[False if x==None  else True for x in xray_flares['location'][auto]]
     
     print(" ")
     print(" ")
@@ -509,7 +510,71 @@ def match_dimmings_flares():
     print("hand match but no automated match", hand_noauto)
     print("automated match but no hand match", auto_nohand)
     print("diff: ", diff)
-    print("accuracy: ", 100*round((same+null)/(same+null+diff+hand_noauto+auto_nohand), 3))
+    print("accuracy: ", 100*round((same+null)/(same+null+diff+hand_noauto+auto_nohand), 3), "%")
+ 
+    #make a location mask
+    print("auto", auto)
+    is_location=[]
+    for ind in auto:
+        if ind==None:
+            is_location.append(False)
+        elif xray_flares['location'][ind]==None:
+            is_location.append(False)
+        else:
+            is_location.append(True)
+            
+    is_location=[False if x==None  else True for x in xray_flares['location'][auto]]
+    auto_loc=[]
+    conf_loc=[]
+    mat_loc=[]
+    auto_noloc=[]
+    conf_noloc=[]
+    mat_noloc=[]
+
+#    print(xray_flares['location'][auto])
+
+    #take only events with location
+    for ind in range(len(is_location)):
+        if is_location[ind]:
+            auto_loc.append(auto[ind])
+            conf_loc.append(conf[ind])
+            mat_loc.append(mat[ind])
+        else:
+            auto_noloc.append(auto[ind])
+            conf_noloc.append(conf[ind])
+            mat_noloc.append(mat[ind])   
+            
+#    print(auto_loc)
+#    print(auto_noloc)
+    
+    [same, diff, auto_nohand, hand_noauto, null] = calc_overall_stats(auto_loc, conf_loc, mat_loc, xray_flares, hand_matches)
+           
+    print(" ")
+    print(" ")
+    print("When we know the location")    
+    print("Overall statistics")
+    print("same flare: ", same)
+    print("same null: ", null)
+    print("hand match but no automated match", hand_noauto)
+    print("automated match but no hand match", auto_nohand)
+    print("diff: ", diff)
+    print("accuracy: ", 100*round((same+null)/(same+null+diff+hand_noauto+auto_nohand), 3), "%")
+            
+    [same, diff, auto_nohand, hand_noauto, null] = calc_overall_stats(auto_noloc, conf_noloc, mat_noloc, xray_flares, hand_matches)
+       
+    print(" ")
+    print(" ")
+    print("When we don't know the location")    
+    print("Overall statistics")
+    print("same flare: ", same)
+    print("same null: ", null)
+    print("hand match but no automated match", hand_noauto)
+    print("automated match but no hand match", auto_nohand)
+    print("diff: ", diff)
+    print("accuracy: ", 100*round((same+null)/(same+null+diff+hand_noauto+auto_nohand), 3), "%")   
+    
+    
+    
         
 def coord2pa(ew_coord, ns_coord):
     x=ew_coord*1.0

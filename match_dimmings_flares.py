@@ -15,55 +15,64 @@ import pandas as pd
 
 sys.path.append('../common/')
 
+def determine_best_flare(time_match, big_match, verbose=False):
+    """This is where the logic is for choosing the best flare when the flare 
+    closest in time is not the biggest. The inputs are the time difference 
+    between the biggest flare and the dimming (big_diff), the time difference 
+    between the closest flare in time and the dimming (time_diff), the size of 
+    the biggest flare (big_size) and the size of the flare closest in 
+    time (time_size) and the indices for each (big_ind and time_ind)"""
+    
+    if verbose==True:
+        print("Time difference from biggest flare to dimming: ", big_match["time_diff"])
+        print("Time difference from closest flare in time to dimming: ", time_match["time_diff"])
+    if big_match["time_diff"]<timedelta(hours=0): #if the biggest is less than 0 hour from dimming start time, it's the best one
+        best_match=big_match["index"]
+
+    else:
+        best_match=time_match["index"]
+        
+    conf=0.8 #any penalty for having no location will be removed in the parent routine
+    return (best_match, conf)        
+            
 def calc_overall_stats(best, conf, mat, xray_flares, hand_matches):
+    """calculates the number of auto matches that are the same as the hand-
+    selected matches"""
+    
     same=0
     diff=0
     auto_nohand=0
     hand_noauto=0
     null=0
-#    print("best", best)
-#    print("mat", mat)
-    for ind in range(len(best)):
-        
-        auto=best[ind]
+
+    for ind in range(len(best)):  #step through the matches
+        auto=best[ind]   #this is to simplify the indices of indices problem 
         manual=mat[ind]
-#        print("auto", auto)
-#        print("manual", manual)
+
         hand_init=hand_matches['init_date'][manual]
-#        print("hand_init", hand_init)
+
+        #if both the auto and by hand methods find a match
         if is_nat(hand_init)==False and auto!=None:
 #            print("match index", match_time[index])
             best_init=xray_flares['init_date'][auto]
-            best_loc=xray_flares['location'][auto]
-            best_xraysize=xray_flares['xray_class'][auto]+str(xray_flares['xray_size'][auto]/10.)
 
-
-            hand_loc=hand_matches["loc"][manual]
-            hand_flare=hand_matches["flare_class"][manual]+str(hand_matches["flare_size"][manual]/10.)
-
-#            print("hand_loc", hand_loc)
-            if pd.isnull(hand_loc):
-                hand_loc="no location"
-
-#            print("auto match flare:            ", best_init, best_loc, best_xraysize)#, type(init))
-#            print("hand match flare:            ", manual, hand_loc, hand_flare)#, type(mat))
-#            init=init.values
-            
             if best_init==hand_init:
-#                print("SAME")
                 same+=1
             else:
-#                print("DIFFERENT!!")
                 diff+=1
+        
+        #automated match found, no hand match
         elif is_nat(hand_init)==True and auto!=None:
-#            print("automated match but no hand match")
             auto_nohand+=1
+            
+        #hand match found, no automated match
         elif is_nat(hand_init)==False and auto==None:
-#            print("hand match but no automated match")
             hand_noauto+=1
+            
+        #no automated or hand match
         elif is_nat(hand_init)==True and auto==None:
-#            print("no hand or auto match")
             null+=1
+            
     return ([same, diff, auto_nohand, hand_noauto, null])
 
 def determine_conf(time_ind, big_ind, dist_ind, target_time, xray_flares, verbose=False):
@@ -97,20 +106,18 @@ def determine_conf(time_ind, big_ind, dist_ind, target_time, xray_flares, verbos
     elif time_ind==big_ind: #if biggest and closest in time are same -- pretty confident
         best_match=time_ind
         conf=0.9-penalty
+    
+    #!!!!!!ANY CHANGE FOR THE LOGIC OF FLARE MATCH GOES HERE
     else: #here's the logic for picking biggest flare or closest in time
         big_diff=abs(target_time-xray_flares['init_date'][big_ind])
         time_diff=abs(target_time-xray_flares['init_date'][time_ind])
-#            dist_diff=target_time[index]-xray_flares['init_date'][match_dist[index]]
-        if verbose==True:
-            print("big_diff", big_diff)
-            print("time_diff", time_diff)
-        if big_diff<timedelta(hours=0): #if the biggest is less than an hour from dimming start time, it's the best one
-            best_match=big_ind
-            conf=0.8-penalty
-        else:
-            best_match=time_ind
-            conf=0.8
-#            print("dist_diff", dist_diff)
+        big_size=xray_flares['xray_class'][big_ind]+str(xray_flares['xray_size'][big_ind]/10.)
+        time_size=xray_flares['xray_class'][time_ind]+str(xray_flares['xray_size'][time_ind]/10.)
+        time_match={"time_diff":time_diff, "size":time_size, "index":time_ind}
+        big_match={"time_diff":big_diff, "size":big_size, "index":big_ind}
+        (best_match, conf)=determine_best_flare(time_match, big_match, verbose=False)
+        conf=conf-penalty
+        
         
     conf=math.floor(conf*10)/10.
     print("CONFIDENCE LEVEL", conf)
@@ -165,17 +172,10 @@ def create_datetime_cme(ymd, hm):
     #unpack ymd and fix year
 
     for item, ihm in zip(ymd, hm):
-#        print("len(date): ", len(date))
-        print("item", item)
-        print("ihm", ihm)
+
         if pd.isnull(item)==True:
-##            print("blank line")
             date.append(None)
             continue
-        
-#        print(item)
-        
-#        print(datestr)
     
         datestr=str(item).split("/")
         year=int(datestr[0])
@@ -516,7 +516,7 @@ def match_dimmings_flares():
     print("auto", auto)
     is_location=[]
     for ind in auto:
-        if ind==None:
+        if ind==None: #if there is no match
             is_location.append(False)
         elif xray_flares['location'][ind]==None:
             is_location.append(False)

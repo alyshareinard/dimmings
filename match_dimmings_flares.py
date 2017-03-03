@@ -34,7 +34,16 @@ def determine_best_flare(time_match, big_match, verbose=False):
         
     conf=0.8 #any penalty for having no location will be removed in the parent routine
     return (best_match, conf)        
-            
+    
+def print_summary_flares(dimming_vals, flare_vals, hand_vals=None):
+    """input is the dimming, flare and (optional) the hand matches
+    routine prints the dimming and the matching flare values and the 
+    hand match (if present)"""
+
+    for ind in range(len(best)):  #step through the matches
+        print("  ")
+        print("Target dimming ", target[ind])     
+       
 def calc_overall_stats(best, conf, mat, xray_flares, hand_matches, target):
     """calculates the number of auto matches that are the same as the hand-
     selected matches"""
@@ -91,7 +100,7 @@ def calc_overall_stats(best, conf, mat, xray_flares, hand_matches, target):
             
     return ([same, diff, auto_nohand, hand_noauto, null])
 
-def determine_conf(time_ind, big_ind, dist_ind, target_time, xray_flares, verbose=False):
+def determine_conf_best_flare(time_ind, big_ind, dist_ind, target_time, xray_flares, verbose=False):
     #determine confidence level
 
     if time_ind==None:
@@ -306,12 +315,10 @@ def calc_loc_diff(flare_loc, dim_ns, dim_ew):
 def match_dimmings_flares():
     dimmings=read_Lars_alldim()
     hand_matches=read_hand_flares()
-    
 
     (xray_flares, ha_flares)=get_flare_catalog(2013, 2014)
 
     #first check to make sure there is some overlap in dates
-
     min_dimtime=min(dimmings['time'])
     max_dimtime=max(dimmings['time'])
 
@@ -335,7 +342,7 @@ def match_dimmings_flares():
 
     
     for ind1 in range(len(dimmings['time'])):
-#        print("   ")
+
         dim_ew=dimmings['mean_EW'][ind1]
         dim_ns=dimmings['mean_NS'][ind1]
 #        print("target dimming", dimmings['dim_name'][ind1], dimmings['time'][ind1], "NS: ", dim_ns, "EW: ", dim_ew)
@@ -449,7 +456,7 @@ def match_dimmings_flares():
 
         mat.append(ind2)
 
-        (best, confidence)=determine_conf(match_time[index], match_big[index], match_dist[index], target_time[index], xray_flares)
+        (best, confidence)=determine_conf_best_flare(match_time[index], match_big[index], match_dist[index], target_time[index], xray_flares)
 
         conf.append(confidence)
         auto.append(best)
@@ -570,7 +577,6 @@ def match_dimmings_CME():
 
     
     min_cme=min(cmes['date'])
-#    min_xray=min(x for x in xray_flares['peak_date'] if x is not None)
     max_cme=max(x for x in cmes['date'] if x is not None)
     
     print("cme times", min_cme, max_cme)
@@ -580,7 +586,7 @@ def match_dimmings_CME():
         print("we have overlap!")
 
     #let's start with stepping through the dimmings
-    match=[]
+    match_time=[]
     match_dist=[]
     target_time=[]
     target_loc=[]
@@ -589,7 +595,7 @@ def match_dimmings_CME():
     time_time=[]
     time_loc=[]
     target_name=[]
-#    print(xray_flares["init_date"])
+
     
     for ind1 in range(len(dimmings['time'])):
         print("   ")
@@ -597,44 +603,30 @@ def match_dimmings_CME():
         dim_ew=dimmings['mean_EW'][ind1]
         dim_ns=dimmings['mean_NS'][ind1]
         dim_pa=int(round(coord2pa(dim_ew, dim_ns)))
-#        print("target dimming", dimmings['dim_name'][ind1], dimmings['time'][ind1], "NS: ", dim_ns, "EW: ", dim_ew, "PA: ", dim_pa)
 
         
         target_time.append(dimmings['time'][ind1])
-#        print("is this the target", dimmings['dim_name'][ind1])
         target_name.append(dimmings['dim_name'][ind1])
-#        if dim_ns<0:
-#            NS="S"
-#        else:
-#            NS="N"
-#        if dim_ew<0:
-#            EW="E"
-#        else:
-#            EW="W"
-        target_loc.append(dim_pa)#    for dim in dimmings:
-        #this is going to be totally inefficient
+        target_loc.append(dim_pa)
+
         possibilities=[]
         for ind2 in range(len(cmes['date'])):
             timediff=timedelta(hours=4)
             dimtime=dimmings['time'][ind1]
             cmetime=cmes['date'][ind2]
 
-#            print("ind2", ind1, ind2, len(xray_flares['peak_time']))
-#            print("flare", ind1, ind2, flaretime)
-
             if cmetime !=None and cmetime<(dimtime+timediff) and cmetime>(dimtime-timediff):
                 #now check location
                 cme_pa=int(cmes['mpa'][ind2])
-#                print("cme_pa", cme_pa)
-#                print("dim_pa", dim_pa)
-                pa_diff=abs(cme_pa-dim_pa)#[x-y for x,y in zip(cme_pa,dim_pa)]
+
+                pa_diff=abs(cme_pa-dim_pa)
 
                 if pa_diff == None or pa_diff<30:
                     possibilities.append(ind2)
 
         if len(possibilities)==0:
             print("no matching cmes")
-            match.append(None)
+            match_time.append(None)
             match_dist.append(None)
         elif len(possibilities)==1:
             print("one matching cme")
@@ -643,12 +635,12 @@ def match_dimmings_CME():
             cme_pa=int(cmes['mpa'][x])
             print("cme PA", cme_pa)
 
-            print("cme time", cmes['date'][x])#, xray_flares['peak_date'][x], xray_flares['final_date'][x])
+            print("cme time", cmes['date'][x])
             print("cme_width", cmes['width'][x])
             pa_diff=abs(cme_pa-dim_pa)
             print("time diff", dimtime - cmes['date'][x])
 
-            match.append(possibilities[0])
+            match_time.append(possibilities[0])
             match_dist.append(possibilities[0])
         elif len(possibilities)>1:
             print("possible flare summary:")
@@ -659,22 +651,17 @@ def match_dimmings_CME():
                 CME_pa=int(cmes['mpa'][x])
 
                 print("cme PA", CME_pa)
-                print("cme time", cmes['date'][x])#, xray_flares['peak_date'][x], xray_flares['final_date'][x])
+                print("cme time", cmes['date'][x])
                 print("cme_width", cmes['width'][x])
                 pa_diff_val=abs(CME_pa-dim_pa)
                 t_diff=(dimtime - cmes['date'][x])
                 time_diff.append(round((t_diff.days*86400+t_diff.seconds)/60./60., 2))
                 pa_diff.append(pa_diff_val)
 
-#                print("time diff", dimtime - cmes['date'][x])
-        
-#                print("  ")
           
             print("event summary")
             print("pa diffs: ", pa_diff)
 
-#            print("time differences (in hours): ", time_diff)#, timediff.index(min([abs(x) for x in time_diff])))
-#            print("time differences (in hours/float): ", [float(x) for x in time_diff])
 
             tdiff_absfloat=[abs(float(x)) for x in time_diff]
             shortest_time=tdiff_absfloat.index(min(tdiff_absfloat))
@@ -692,99 +679,95 @@ def match_dimmings_CME():
             if min(pa_diff)==9999: shortest_dist=None
             print("shortest_time", shortest_time)
             print("shortest_pa", shortest_pa)
-#            print(possibilities[shortest_time])
-            match.append(possibilities[shortest_time])
+
+            match_time.append(possibilities[shortest_time])
             if shortest_pa==None or shortest_pa==shortest_time:
                 match_dist.append(None)
             else:
                 match_dist.append(possibilities[shortest_pa])            
-    
-#            dist_time.append(xray_flares['init_date'][x])
-#          print(dim_ew, dim_ns, flare_loc, flare_ew, flare_ns)
-#    print("  ")
-#    print("  ")
-    
-#    print("matches", hand_matches["dim_name"][0:30])
-#    print("target", target_name)    
-#    print("summary of all events:")
-    
-    ind2=0
-    diff=0
-    hand_noauto=0
-    auto_nohand=0
-    same=0
-    null=0
-#    init=pd.to_datetime(xray_flares["init_date"])
-#    print("what??", type(init))
-    for index in range(len(target_time)): 
-#        print("  ")
-#        print("  ")
-#        index+=1
+#    
+#    
+#    ind2=0
+#    diff=0
+#    hand_noauto=0
+#    auto_nohand=0
+#    same=0
+#    null=0
 
-#        ind2=index
-#        if target_name[index][0:13]==hand_matches["dim_name"][ind2][0:13]:
-#            print("matches!")
-#        print("TARGET", target_name[index][0:13])
-#        print("MATCH", hand_matches["dim_name"][ind2][0:13])
-#        print("testing...", index, ind2)
-#        print(target_name[index][0:13])
-#        print(hand_matches["dim_name"][ind2][0:13])
+#    for index in range(len(target_time)): 
+#
+#        while target_name[index][0:13]!=hand_matches["dim_name"][ind2][0:13]:
+#            ind2=ind2+1 
+#
+#
+##        print("Target dimming:", target_name[index], target_time[index], target_loc[index])
+#
+#        if match_time[index]!=None:
+##            print("Best flare based on time")
+#
+##            pa=cmes['pa'][match_time[index]]
+#
+#            print("CME closest in time:       ", cmes['date'][match_time[index]], cmes['PA'][match_time[index]], cmes['width'][match_time[index]])#, xraysize)#, xray_flares['xray_class'][match_time[index]], xray_flares['xray_size'][match_time[index]])
+#        else:
+#            print("No cme match")
+#            if match_dist[index]!=None:
+#                print("What?? There's a problem here")
+#        if match_dist[index]!=None:
+##            print(match_dist[index])
+#            print("CME closest in distance:   ", cmes['date'][match_dist[index]], cmes['PA'][match_dist[index]], cmes['width'][match_time[index]])
+#
+#        else:
+#            print("No CME match based on distance")  
+#        mat=hand_matches["date"][ind2]
+#
+#
+#        if is_nat(mat)==False and match_time[index]!=None:
+#
+#            init=cmes["date"][match_time[index]]
+#            cme_PA=cmes["PA"][match_time[index]]
+#            hand_PA=hand_matches["PA"][index]
+#
+#            if pd.isnull(hand_PA):
+#                hand_PA="no location"
+#
+#            hand_cme=hand_matches["width"][index]
+#            print("auto match CME:            ", init, cme_PA)
+#            print("hand match CME:            ", mat, hand_PA, hand_cme)
+#
+#            
+#            if init==mat:
+#                print("SAME")
+#                same+=1
+#            else:
+#                print("DIFFERENT!!")
+#                diff+=1
+#        elif is_nat(mat)==True and match_time[index]!=None:
+#            print("automated match but no hand match")
+#            auto_nohand+=1
+#        elif is_nat(mat)==False and match_time[index]==None:
+#            print("hand match but no automated match")
+#            hand_noauto+=1
+#        elif is_nat(mat)==True and match_time[index]==None:
+#            print("no hand or auto match")
+#            null+=1
+            
+
+    for index in range(len(target_time)): 
+
         while target_name[index][0:13]!=hand_matches["dim_name"][ind2][0:13]:
             ind2=ind2+1 
 
+        mat.append(ind2)
 
-#        print("Target dimming:", target_name[index], target_time[index], target_loc[index])
+        (best, confidence)=determine_conf_best_CME(match_time[index], match_big[index], match_dist[index], target_time[index], cmes)
 
-        if match_time[index]!=None:
-#            print("Best flare based on time")
-
-#            pa=cmes['pa'][match_time[index]]
-
-            print("CME closest in time:       ", cmes['date'][match_time[index]], cmes['PA'][match_time[index]], cmes['width'][match_time[index]])#, xraysize)#, xray_flares['xray_class'][match_time[index]], xray_flares['xray_size'][match_time[index]])
-        else:
-            print("No cme match")
-            if match_dist[index]!=None:
-                print("What?? There's a problem here")
-        if match_dist[index]!=None:
-#            print(match_dist[index])
-            print("CME closest in distance:   ", cmes['date'][match_dist[index]], cmes['PA'][match_dist[index]], cmes['width'][match_time[index]])
-#            print(xray_flares['location'][match_dist[index]])
-#            print(xray_flares['init_date'][match_dist[index]])
-        else:
-            print("No flare match based on distance")  
-        mat=hand_matches["date"][ind2]
-
-#        print("mat", mat)
-#        print("match_time[index]", match_time[index])
-        if is_nat(mat)==False and match_time[index]!=None:
-#            print("match index", match_time[index])
-            init=cmes["date"][match_time[index]]
-            cme_PA=cmes["PA"][match_time[index]]
-            hand_PA=hand_matches["PA"][index]
-#            print("hand_loc", hand_loc)
-            if pd.isnull(hand_PA):
-                hand_PA="no location"
-
-            hand_cme=hand_matches["width"][index]
-            print("auto match CME:            ", init, cme_PA)#, type(init))
-            print("hand match CME:            ", mat, hand_PA, hand_cme)#, type(mat))
-#            init=init.values
+        conf.append(confidence)
+        auto.append(best)
+        
             
-            if init==mat:
-                print("SAME")
-                same+=1
-            else:
-                print("DIFFERENT!!")
-                diff+=1
-        elif is_nat(mat)==True and match_time[index]!=None:
-            print("automated match but no hand match")
-            auto_nohand+=1
-        elif is_nat(mat)==False and match_time[index]==None:
-            print("hand match but no automated match")
-            hand_noauto+=1
-        elif is_nat(mat)==True and match_time[index]==None:
-            print("no hand or auto match")
-            null+=1
+        
+    [same, diff, auto_nohand, hand_noauto, null] = calc_overall_stats(auto, conf, mat, cmes, hand_matches, target_name)       
+    
             
     print(" ")
     print(" ")
@@ -797,7 +780,7 @@ def match_dimmings_CME():
     print("accuracy: ", (same+null)/(same+null+diff+hand_noauto+auto_nohand))
     
           
-#match_dimmings_CME()
-match_dimmings_flares()
+match_dimmings_CME()
+#match_dimmings_flares()
     
     

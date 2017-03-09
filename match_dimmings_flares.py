@@ -418,9 +418,8 @@ def compare_flare_hand():
 #    print("diff: ", diff)
 #    print("accuracy: ", 100*round((same+null)/(same+null+diff+hand_noauto+auto_nohand), 3), "%")   
     
-def flare_size(event):
-    mag=event['xray_class']
-    size=event['xray_size']
+def flare_size(mag, size):
+
     if mag=='B':
         return size
     elif mag=='C':
@@ -436,11 +435,11 @@ def flare_size(event):
 def cme_size(event):
     return event['width']        
         
-def match_dimmings_flaresCMEs(event_type='flares', max_hours=4):
+def match_dimmings_flaresCMEs(event_type='flares', max_hours=4, print_results=False):
     dimmings=read_Lars_alldim()
     if event_type=='flares':
         (events, ha_flares)=get_flare_catalog(2013, 2014)
-        events['date']=events['peak_date']  #this can be used to chose initial date if needed
+        events['date']=events['peak_date']  #this can be used to chose initial_date if needed
     elif event_type == 'cmes':
         events=get_yashiro_catalog()
     else:
@@ -486,8 +485,8 @@ def match_dimmings_flaresCMEs(event_type='flares', max_hours=4):
                 #now check location
                 if event_type=='flares':
                     event_loc=events['location'][ind2]
-                    dist=calc_loc_diff(flare_loc, dim_ns, dim_ew)
-                    print ("do I get here?")
+                    dist=calc_loc_diff(event_loc, dim_ns, dim_ew)
+
                     if dist == None or dist<30:
                         possibilities.append(ind2)
                         distance.append(dist)
@@ -526,12 +525,14 @@ def match_dimmings_flaresCMEs(event_type='flares', max_hours=4):
                 time_diff.append(round((t_diff.days*86400+t_diff.seconds)/60./60., 2))
 
                 if event_type=='flares':
-                    event_size.append(flare_size(events[x]))
+
+                    event_size.append(flare_size(events['xray_class'][x], events['xray_size'][x]))
                 if event_type=="cmes":
                     print("x", events[x])
                     event_size.append(cme_size(events[x]))
                 
-            biggest=max(event_size)
+            biggest=event_size.index(max(event_size))
+
             match_big.append(possibilities[biggest])
 
 
@@ -564,16 +565,59 @@ def match_dimmings_flaresCMEs(event_type='flares', max_hours=4):
 
     conf=[]
     auto=[]
+    matches=pd.DataFrame(events.keys())
+    nulls=[None for x in events.keys()] #fill value for events with no matches
+    no_match=pd.DataFrame(nulls, events.keys())
+    
+    print("len target time", len(target_time))
+    print("len dimmings", len(dimmings["time"]))
+    #initialize match dataframe
+    (best, confidence)= determine_conf_best_flare(match_time[0], match_big[0], match_dist[0], target_time[0], events)
+    conf=[confidence]
+    auto=[best]
+    if best !=None:
+        print("values")
+        print(events.loc[best])
+        matches=pd.DataFrame(columns=events.keys())
+        matches.append(events.loc[best])
 
+    else:
+        print("null")
+        matches=pd.DataFrame(nulls, columns=events.keys())
+    print("let's start it out -- here is matches", matches)
 
-    for index in range(len(target_time)): 
+    for index in range(1, len(target_time)): 
 
         (best, confidence)=determine_conf_best_flare(match_time[index], match_big[index], match_dist[index], target_time[index], events)
 
         conf.append(confidence)
         auto.append(best)
-    return events[best]
- 
+
+        if best !=None:
+            matches=pd.concat([matches,events.iloc[best]])#, keys=events.keys())      
+        else:
+            matches=pd.concat([matches, no_match])#, keys=events.keys())
+    print("ALL THE MATCHES", matches)
+    if print_results==True:
+
+        print_events(matches, dimmings)
+        
+    return matches
+    
+
+    
+def print_events(auto, dimmings, hand=False, event_type="flares"):
+    if hand==True and event_type=="flares":
+        hand_matches=read_hand_flares()
+    if hand==True and event_type=="cmes":
+        hand_matches=read_hand_cmes()
+    print("auto vals", auto.keys())
+    print(len(auto["time"]), len(dimmings["time"]))
+    if len(auto)!=len(dimmings):
+        print("what!? Auto and dimmings are not the same length.  This sucks!!")
+    for index in range(len(auto)):
+        print("Dimming", dimmings[index])
+        print("Auto match", auto[index])
 
     
         
@@ -815,6 +859,6 @@ def match_dimmings_CME():
     
           
 #match_dimmings_CME()
-auto_matches=match_dimmings_flaresCMEs(event_type='cmes')
-print_events(auto_matches, dimmings)
+auto_matches=match_dimmings_flaresCMEs(event_type='flares', print_results=True)
+#print_events(auto_matches, dimmings)
     

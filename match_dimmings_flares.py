@@ -200,15 +200,15 @@ def determine_conf_best_cme(time_ind, big_ind, dist_ind, target_time, cmes, verb
         return (None, -1)
     
     if verbose==True:
-        print("CME closest in time:       ", cmes['init_date'][time_ind], cmes['pa'][time_ind], cmes['width'][time_ind])
+        print("CME closest in time:       ", cmes['date'][time_ind], cmes['pa'][time_ind], cmes['width'][time_ind])
         if big_ind==None:
             print("no largest CME")
         else:
-            print("CME largest in size:       ", cmes['init_date'][big_ind], cmes['pa'][big_ind], cmes['width'][big_ind])
+            print("CME largest in size:       ", cmes['date'][big_ind], cmes['pa'][big_ind], cmes['width'][big_ind])
         if dist_ind==None:
             print("No closest cme")
         else:
-            print("CME closest in distance:   ", cmes['init_date'][dist_ind], cmes['pa'][dist_ind], cmes['width'][dist_ind])
+            print("CME closest in distance:   ", cmes['date'][dist_ind], cmes['pa'][dist_ind], cmes['width'][dist_ind])
 
     penalty=0.0
     if time_ind!=None and cmes['PA'][time_ind]!=None:

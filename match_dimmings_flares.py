@@ -35,6 +35,27 @@ def determine_best_flare(time_match, big_match, verbose=False):
     conf=0.8 #any penalty for having no location will be removed in the parent routine
     return (best_match, conf)        
     
+def determine_best_cme(time_match, big_match, verbose=False):
+    """This is where the logic is for choosing the best flare when the cme 
+    closest in time is not the biggest. The inputs are the time difference 
+    between the biggest cme and the dimming (big_diff), the time difference 
+    between the closest cme in time and the dimming (time_diff), the size of 
+    the biggest flare (big_size) and the size of the flare closest in 
+    time (time_size) and the indices for each (big_ind and time_ind)"""
+    
+    if verbose==True:
+        print("Time difference from biggest flare to dimming: ", big_match["time_diff"])
+        print("Time difference from closest flare in time to dimming: ", time_match["time_diff"])
+    if big_match["time_diff"]<timedelta(hours=0): #if the biggest is less than 0 hour from dimming start time, it's the best one
+        best_match=big_match["index"]
+
+    else:
+        best_match=time_match["index"]
+        
+    conf=0.8 #any penalty for having no location will be removed in the parent routine
+    return (best_match, conf)  
+    
+    
 def print_summary_flares(dimming_vals, flare_vals, hand_vals=None):
     """input is the dimming, flare and (optional) the hand matches
     routine prints the dimming and the matching flare values and the 
@@ -163,6 +184,56 @@ def determine_conf_best_flare(time_ind, big_ind, dist_ind, target_time, xray_fla
         big_match={"time_diff":big_diff, "size":big_size, "index":big_ind}
 
         (best_match, conf)=determine_best_flare(time_match, big_match, verbose=False)
+        conf=conf-penalty
+        
+        
+    conf=math.floor(conf*10)/10.
+    if verbose==True:
+        print("CONFIDENCE LEVEL", conf)
+    return(best_match, conf)
+    
+def determine_conf_best_cme(time_ind, big_ind, dist_ind, target_time, cmes, verbose=False):
+    #determine confidence level
+
+    if time_ind==None:
+#        print("No matching flare")
+        return (None, -1)
+    
+    if verbose==True:
+        print("CME closest in time:       ", cmes['init_date'][time_ind], cmes['pa'][time_ind], cmes['width'][time_ind])
+        if big_ind==None:
+            print("no largest CME")
+        else:
+            print("CME largest in size:       ", cmes['init_date'][big_ind], cmes['pa'][big_ind], cmes['width'][big_ind])
+        if dist_ind==None:
+            print("No closest cme")
+        else:
+            print("CME closest in distance:   ", cmes['init_date'][dist_ind], cmes['pa'][dist_ind], cmes['width'][dist_ind])
+
+    penalty=0.0
+    if time_ind!=None and cmes['PA'][time_ind]!=None:
+        penalty=0.5  #large drop in confidence if there is no flare location
+
+    if time_ind==None: #no match found
+        best_match=-1
+        conf=-1  #no match/fill val of -1 for confidence level
+    elif time_ind==big_ind and time_ind==dist_ind: #all match -- very confident
+        best_match=time_ind
+        conf=1.0
+    elif time_ind==big_ind: #if biggest and closest in time are same -- pretty confident
+        best_match=time_ind
+        conf=0.9-penalty
+    
+    #the logic for picking biggest flare or closest in time is in the routine determine_best_flare
+    else: 
+        big_diff=abs(target_time-cmes['date'][big_ind])
+        time_diff=abs(target_time-cmes['date'][time_ind])
+        big_size=cmes['width'][big_ind]
+        time_size=cmes['width'][time_ind]
+        time_match={"time_diff":time_diff, "size":time_size, "index":time_ind}
+        big_match={"time_diff":big_diff, "size":big_size, "index":big_ind}
+
+        (best_match, conf)=determine_best_cme(time_match, big_match, verbose=False)
         conf=conf-penalty
         
         
@@ -569,16 +640,20 @@ def match_dimmings_flaresCMEs(event_type='flares', max_hours=4, print_results=Fa
     print("len target time", len(target_time))
     print("len dimmings", len(dimmings["time"]))
     #initialize match dataframe
-    (best, confidence)= determine_conf_best_flare(match_time[0], match_big[0], match_dist[0], target_time[0], events)
+    if event_type=="flares":
+        (best, confidence)= determine_conf_best_flare(match_time[0], match_big[0], match_dist[0], target_time[0], events)
+    elif event_type=="cmes":
+        (best, confidence)= determine_conf_best_cme(match_time[0], match_big[0], match_dist[0], target_time[0], events)
     conf=[confidence]
     auto=[best]
     matches=[]
 
 
     for index in range(len(target_time)): 
-
-        (best, confidence)=determine_conf_best_flare(match_time[index], match_big[index], match_dist[index], target_time[index], events)
-
+        if event_type=="flares":
+            (best, confidence)=determine_conf_best_flare(match_time[index], match_big[index], match_dist[index], target_time[index], events)
+        elif event_type=="cmes":
+            (best, confidence)= determine_conf_best_cme(match_time[index], match_big[index], match_dist[index], target_time[index], events)
         conf.append(confidence)
         auto.append(best)
 

@@ -9,6 +9,7 @@ import sys
 sys.path.append('../common/')
 from scipy.io.idl import readsav
 import os
+import pandas as pd
 from datetime import datetime, timezone
 from sunpy_time import parse_time
 
@@ -76,6 +77,7 @@ def read_Lars_alldim():
     dimmings={'dim_name':dim_name, 'time':time, 'area':area_mm, 'eastedge':east_coos, \
     'westedge':west_coos, 'northedge':north_coos, 'southedge':south_coos, \
     'mean_EW':mean_EW, 'mean_NS':mean_NS}
+    dimmings=pd.DataFrame(dimmings)
 #    print("in routine", type(dimmings))
     return dimmings
 

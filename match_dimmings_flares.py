@@ -112,33 +112,38 @@ def calc_overall_stats(best, conf, mat, xray_flares, hand_matches, target):
     null=0
 
     for ind in range(len(best)):  #step through the matches
-        print("ind", ind)
-        print(best)
+
+#        print("ind", ind)
+#        print("Here's the zeroth!", best)
+#        print(best.loc[ind])
+#        print("!!!Type", type(best))
         auto=best[ind]   #this is to simplify the indices of indices problem 
+        auto=auto["init_date"]
+#        print("!!!auto", auto)
         manual=mat[ind]
 
         hand_init=hand_matches['init_date'][manual]
 
+#        print("hand_init", hand_init)
+#        print("auto", auto)
         #if both the auto and by hand methods find a match
-        if is_nat(hand_init)==False and auto!=None:
+        if is_nat(hand_init)==False and is_nat(auto)==False:
 
-            best_init=xray_flares['init_date'][auto]
-
-            if best_init==hand_init:
+            if auto==hand_init:
                 same+=1
             else:
                 diff+=1
         
         #automated match found, no hand match
-        elif is_nat(hand_init)==True and auto!=None:
+        elif is_nat(hand_init)==True and is_nat(auto)==False:
             auto_nohand+=1
             
         #hand match found, no automated match
-        elif is_nat(hand_init)==False and auto==None:
+        elif is_nat(hand_init)==False and is_nat(auto)==True:
             hand_noauto+=1
             
         #no automated or hand match
-        elif is_nat(hand_init)==True and auto==None:
+        elif is_nat(hand_init)==True and is_nat(auto)==True:
             null+=1
             
     return ([same, diff, auto_nohand, hand_noauto, null])
@@ -414,8 +419,12 @@ def compare_flare_hand(target, auto, events, conf):
             ind2=ind2+1 
 
         mat.append(ind2)            
+
+        all_auto=[]
+    for ind in range(len(auto)):
+        all_auto.append(auto.loc[ind])
         
-    [same, diff, auto_nohand, hand_noauto, null] = calc_overall_stats(auto, conf, mat, events, hand_matches, target["dim_name"])       
+    [same, diff, auto_nohand, hand_noauto, null] = calc_overall_stats(all_auto, conf, mat, events, hand_matches, target["dim_name"])       
     
     print(" ")
     print(" ")
@@ -429,10 +438,10 @@ def compare_flare_hand(target, auto, events, conf):
  
     #make a location mask
     is_location=[]
-    for ind in auto:
+    for ind in range(len(auto)):
         if ind==None: #if there is no match
             is_location.append(False)  ###determines whether nulls go into no location or location piles
-        elif xray_flares['location'][ind]==None:
+        elif auto['location'][ind]==None:
             is_location.append(False)
         else:
             is_location.append(True)
@@ -450,23 +459,23 @@ def compare_flare_hand(target, auto, events, conf):
 
 #    print(xray_flares['location'][auto])
 
+
+
     #take only events with location
     for ind in range(len(is_location)):
         if is_location[ind]:
-            auto_loc.append(auto[ind])
+            auto_loc.append(auto.loc[ind])
             conf_loc.append(conf[ind])
             mat_loc.append(mat[ind])
-            target_name_loc.append(target_name[ind])
-        else:
-            auto_noloc.append(auto[ind])
-            conf_noloc.append(conf[ind])
-            mat_noloc.append(mat[ind])
-            target_name_noloc.append(target_name[ind])
+            target_name_loc.append(target["dim_name"][ind])
+#        else:
+#            auto_noloc.append(auto[ind])
+#            conf_noloc.append(conf[ind])
+#            mat_noloc.append(mat[ind])
+#            target_name_noloc.append(target_name[ind])
             
-#    print(auto_loc)
-#    print(auto_noloc)
     
-    [same, diff, auto_nohand, hand_noauto, null] = calc_overall_stats(auto_loc, conf_loc, mat_loc, xray_flares, hand_matches, target_name_loc)
+    [same, diff, auto_nohand, hand_noauto, null] = calc_overall_stats(auto_loc, conf_loc, mat_loc, events, hand_matches, target_name_loc)
            
     print(" ")
     print(" ")

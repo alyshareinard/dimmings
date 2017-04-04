@@ -61,12 +61,12 @@ def print_summary_flares(dimming_vals, flare_vals, hand_vals=None):
     routine prints the dimming and the matching flare values and the 
     hand match (if present)"""
 
-    for ind in range(len(best)):  #step through the matches
+    for ind in range(len(dimming_vals)):  #step through the matches
         print("  ")
-        print("Target dimming ", target[ind])     
+        print("Target dimming ", dimming_vals[ind])     
         print("auto match flare:            ", best_init, best_loc, best_xraysize)
         print("hand match flare:            ", hand_init, hand_loc, hand_flare)
-
+#TODO update this routine
         if is_nat(hand_init)==False and auto!=None:
 
             best_init=xray_flares['init_date'][auto]
@@ -111,6 +111,12 @@ def calc_overall_stats(best, conf, mat, xray_flares, hand_matches, target):
     hand_noauto=0
     null=0
 
+    if isinstance(best, pd.DataFrame): #if it's a dataframe make it a list
+        temp=[]
+        for ind in range(len(best)):
+            temp.append(best.loc[ind])
+        best=temp
+            
     for ind in range(len(best)):  #step through the matches
 
 #        print("ind", ind)
@@ -414,17 +420,19 @@ def compare_flare_hand(target, auto, events, conf):
     print(target.keys())
     ind2=0
     mat=[]
-    for index in range(len(target["time"])): 
+    
+    for index in range(len(target["time"])):
+
+
         while target["dim_name"][index][0:13]!=hand_matches["dim_name"][ind2][0:13]:
             ind2=ind2+1 
 
-        mat.append(ind2)            
+            if ind2>len(hand_matches)-1:
+                break
 
-        all_auto=[]
-    for ind in range(len(auto)):
-        all_auto.append(auto.loc[ind])
+        mat.append(ind2)            
         
-    [same, diff, auto_nohand, hand_noauto, null] = calc_overall_stats(all_auto, conf, mat, events, hand_matches, target["dim_name"])       
+    [same, diff, auto_nohand, hand_noauto, null] = calc_overall_stats(auto, conf, mat, events, hand_matches, target["dim_name"])       
     
     print(" ")
     print(" ")
@@ -447,7 +455,7 @@ def compare_flare_hand(target, auto, events, conf):
             is_location.append(True)
             
 #    is_location=[False if x==None  else True for x in xray_flares['location'][auto]]
-    print(is_location)
+#    print(is_location)
     auto_loc=[]
     conf_loc=[]
     mat_loc=[]
@@ -646,12 +654,12 @@ def match_dimmings_flaresCMEs(event_type='flares', max_hours=4, print_results=Fa
 
     conf=[]
     auto=[]
-    print("events.keys", events.keys())
+#    print("events.keys", events.keys())
     nulls=[None for x in events.keys()] #fill value for events with no matches
 
     
-    print("len target time", len(target_time))
-    print("len dimmings", len(dimmings["time"]))
+#    print("len target time", len(target_time))
+#    print("len dimmings", len(dimmings["time"]))
     #initialize match dataframe
     if event_type=="flares":
         (best, confidence)= determine_conf_best_flare(match_time[0], match_big[0], match_dist[0], target_time[0], events)
@@ -750,7 +758,7 @@ def match_dimmings_CME():
     cmes=get_yashiro_catalog()
 #    print("!!!!", xray_flares['peak_time'])
     #first check to make sure there is some overlap in dates
-    print("dimming time", dimmings['time'])
+#    print("dimming time", dimmings['time'])
     min_dimtime=min(dimmings['time'])
     max_dimtime=max(dimmings['time'])
 

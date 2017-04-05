@@ -360,6 +360,7 @@ def create_datetime2(ymd, hm):
 
             try:
                 date.append(datetime(year, month, day, hour, minute))
+#                print("CHECKIT", date[-1])
             except:
                 print(year, month, day, hour, minute, "is not a valid date, skipping")
                 date.append(None)
@@ -382,6 +383,7 @@ def read_hand_flares():
     data["init_date"]=create_datetime2(data["date"], data["start"])
     data["peak_date"]=create_datetime2(data["date"], data["peak"])
     data["final_date"]=create_datetime2(data["date"], data["end"])    
+    print("CHECK INIT", data["init_date"])
     return data
     
 def read_hand_cmes():
@@ -711,7 +713,7 @@ def print_events(auto, dimmings, hand=True, event_type="flares"):
         print("Dimming", dim["dim_name"].values[0])#.tolist())
         if event_type=="flares":
 #            print(au["peak_date"].values[0])
-            if au["peak_date"].values[0] == np.datetime64('NaT'):
+            if pd.isnull(au["peak_date"].values[0]):  #how to check for NaTs! evaluates to true if it is an NaT
                 print("Auto match: None")
             else:
                 print("Auto match", pd.to_datetime(au["peak_date"].values[0]).strftime("%Y-%m-%d %H:%M"), au["xray_class"].values[0], au["xray_size"].values[0]/10., au["location"].values[0])#.tolist())
@@ -720,6 +722,7 @@ def print_events(auto, dimmings, hand=True, event_type="flares"):
             print("Auto match", au["date"].values[0], au["PA"].values[0], au["width"].values[0])#.tolist()  
         if hand==True:
             hand_mat=hand_matches.iloc[[index]]
+            print("hand_mat", hand_mat)
             try:
                 print("hand match", pd.to_datetime(hand_mat["date"].values[0]).strftime("%Y-%m-%d %H:%M"), hand_mat["flare_class"].values[0], hand_mat["flare_size"].values[0])#.tolist())
 #            if hand_mat["date"].values[0] == np.datetime64('NaT'):

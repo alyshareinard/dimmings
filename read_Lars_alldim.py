@@ -13,7 +13,7 @@ import pandas as pd
 from datetime import datetime, timezone
 from sunpy_time import parse_time
 
-def read_Lars_alldim():
+def read_Lars_alldim(training=False):
  #   rootdir=os.getcwd()+"/Lars dimmings/Example_dimmings/"  
 #    print("root first", rootdir)
     
@@ -39,11 +39,18 @@ def read_Lars_alldim():
     count=0
     for file in files:
         if "_alldim_props" in file:
+            count+=1
+
+    training_number=int(count/2.)
+    count=0
+    print("!!!!!!!!", training, training_number, len(files))
+    for file in files:
+        if "_alldim_props" in file:
             print("reading", file)
             count+=1
-#            print(count)
-            if count>=300:
-                print("first 30 dimmings returned for testing")
+
+            if training == True and count>training_number:
+                print("half of dimmings returned for testing")
                 break
             data=readsav(rootdir+file) #contains dim_name, area_mm, time, euv_min, bz_mean, absbz_mean, bz_max, north_coos, south_coos, east_coos, west_coos
 #            print(data)
@@ -74,7 +81,7 @@ def read_Lars_alldim():
     mean_EW=[(x+y)/2 for x,y in zip(east_coos, west_coos)]
     mean_NS=[(x+y)/2 for x,y in zip(north_coos, south_coos)]
    
-    dimmings={'dim_name':dim_name, 'time':time, 'area':area_mm, 'eastedge':east_coos, \
+    dimmings={'dim_name':dim_name, 'date':time, 'area':area_mm, 'eastedge':east_coos, \
     'westedge':west_coos, 'northedge':north_coos, 'southedge':south_coos, \
     'mean_EW':mean_EW, 'mean_NS':mean_NS}
     dimmings=pd.DataFrame(dimmings)

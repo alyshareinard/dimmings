@@ -56,52 +56,67 @@ def determine_best_cme(time_match, big_match, verbose=False):
     return (best_match, conf)  
     
     
-def print_summary_flares(dimming_vals, flare_vals, hand_vals=None):
+def print_summary_flares(dimming_vals, flare_vals, matches, hand=False):
     """input is the dimming, flare and (optional) the hand matches
     routine prints the dimming and the matching flare values and the 
     hand match (if present)"""
+    if hand==True:
+        hand_matches=read_hand_flares()
 
     for ind in range(len(dimming_vals)):  #step through the matches
+        dimming=dimming_vals.loc[ind]
+        auto=matches.loc[ind]
         print("  ")
-        print("Target dimming ", dimming_vals[ind])     
-        print("auto match flare:            ", best_init, best_loc, best_xraysize)
-        print("hand match flare:            ", hand_init, hand_loc, hand_flare)
-#TODO update this routine
-        if is_nat(hand_init)==False and auto!=None:
-
-            best_init=xray_flares['init_date'][auto]
-            best_loc=xray_flares['location'][auto]
-            best_xraysize=xray_flares['xray_class'][auto]+str(xray_flares['xray_size'][auto]/10.)
-
-
-            hand_loc=hand_matches["loc"][manual]
-            hand_flare=hand_matches["flare_class"][manual]+str(hand_matches["flare_size"][manual]/10.)
-
-
-            if best_init==hand_init:
-                same+=1
-                print("SAME")
-            else:
-                diff+=1
-                print("DIFFERENT!")
+        print("Target dimming ", dimming["dim_name"], dimming["date"], dimming["mean_EW"], dimming["mean_NS"])   
         
-        #automated match found, no hand match
-        elif is_nat(hand_init)==True and auto!=None:
-            print("automated match but no hand match")
-            auto_nohand+=1
-            
-        #hand match found, no automated match
-        elif is_nat(hand_init)==False and auto==None:
-            print("hand match but no automated match")
-            hand_noauto+=1
-            
-        #no automated or hand match
-        elif is_nat(hand_init)==True and auto==None:
-            print("no hand or automated match")
-            null+=1
+        print("Auto match flare: ", auto["date"], auto["location"], auto["xray_class"], auto["xray_size"]/10., auto["NOAA_AR"])
         
+        if hand==True:
+            hand_mat=hand_matches.loc[ind]
+            print("Hand match flare: ", hand_mat["date"], hand_mat["loc"], hand_mat["flare_class"], hand_mat["flare_size"]/10., hand_mat["LarAR"])
+    
+            if pd.isnull(hand_mat["date"]) and pd.isnull(auto["date"]):
+                print("Same NULL")
+            elif pd.isnull(hand_mat["date"])==False and pd.isnull(auto["date"]):
+                print("Hand match, but no auto match")
+            elif pd.isnull(hand_mat["date"]) and pd.isnull(auto["date"])==False:
+                print("Auto match but no hand match")
+            elif hand_mat["date"]==auto["date"]:
+                print("Same Flare")
+            else: 
+                print("Different flare")
+    
+def print_summary_cmes(dimming_vals, cme_vals, matches, hand=False):
+    """input is the dimming, flare and (optional) the hand matches
+    routine prints the dimming and the matching flare values and the 
+    hand match (if present)"""
+    if hand==True:
+        hand_matches=read_hand_cmes()
+
+    for ind in range(len(dimming_vals)):  #step through the matches
+        dimming=dimming_vals.loc[ind]
+        auto=matches.loc[ind]
+        print("  ")
+        print("Target dimming ", dimming["dim_name"], dimming["date"], dimming["mean_EW"], dimming["mean_NS"])   
+        
+        print("Auto match flare: ", auto["date"], auto["PA"], auto["width"])
+        
+        if hand==True:
+            hand_mat=hand_matches.loc[ind]
+            print("Hand match flare: ", hand_mat["date"], hand_mat["PA"], hand_mat["width"])
+    
+            if pd.isnull(hand_mat["date"]) and pd.isnull(auto["date"]):
+                print("Same NULL")
+            elif pd.isnull(hand_mat["date"])==False and pd.isnull(auto["date"]):
+                print("Hand match, but no auto match")
+            elif pd.isnull(hand_mat["date"]) and pd.isnull(auto["date"])==False:
+                print("Auto match but no hand match")
+            elif hand_mat["date"]==auto["date"]:
+                print("Same CME")
+            else: 
+                print("Different CME")
        
-def calc_overall_stats(best, conf, mat, xray_flares, hand_matches, target):
+def calc_overall_stats(best, conf, mat, hand_matches, target):
     """calculates the number of auto matches that are the same as the hand-
     selected matches"""
     
@@ -111,34 +126,22 @@ def calc_overall_stats(best, conf, mat, xray_flares, hand_matches, target):
     hand_noauto=0
     null=0
 
-    if isinstance(best, pd.DataFrame): #if it's a dataframe make it a list
-        temp=[]
-        for ind in range(len(best)):
-            temp.append(best.loc[ind])
-        best=temp
             
     for ind in range(len(best)):  #step through the matches
 
-#        print("ind", ind)
-#        print("Here's the zeroth!", best)
-#        print(best.loc[ind])
-#        print("!!!Type", type(best))
         auto=best[ind]   #this is to simplify the indices of indices problem 
-        auto=auto["init_date"]
-#        print("!!!auto", auto)
         manual=mat[ind]
 
-        hand_init=hand_matches['init_date'][manual]
-
-#        print("hand_init", hand_init)
-#        print("auto", auto)
-        #if both the auto and by hand methods find a match
+        hand_init=hand_matches[manual]
+        
         if is_nat(hand_init)==False and is_nat(auto)==False:
 
             if auto==hand_init:
                 same+=1
+#                print("SAME")
             else:
                 diff+=1
+#                print("DIFF")
         
         #automated match found, no hand match
         elif is_nat(hand_init)==True and is_nat(auto)==False:
@@ -162,15 +165,15 @@ def determine_conf_best_flare(time_ind, big_ind, dist_ind, target_time, xray_fla
         return (None, -1)
     
     if verbose==True:
-        print("Flare closest in time:       ", xray_flares['init_date'][time_ind], xray_flares['location'][time_ind], xray_flares['xray_class'][time_ind], xray_flares['xray_size'][time_ind]/10.)
+        print("Flare closest in time:       ", xray_flares['date'][time_ind], xray_flares['location'][time_ind], xray_flares['xray_class'][time_ind], xray_flares['xray_size'][time_ind]/10.)
         if big_ind==None:
             print("no largest flare")
         else:
-            print("Flare largest in size:       ", xray_flares['init_date'][big_ind], xray_flares['location'][big_ind], xray_flares['xray_class'][big_ind], xray_flares['xray_size'][big_ind]/10.)
+            print("Flare largest in size:       ", xray_flares['date'][big_ind], xray_flares['location'][big_ind], xray_flares['xray_class'][big_ind], xray_flares['xray_size'][big_ind]/10.)
         if dist_ind==None:
             print("No closest flare")
         else:
-            print("Flare closest in distance:   ", xray_flares['init_date'][dist_ind], xray_flares['location'][dist_ind], xray_flares['xray_class'][dist_ind], xray_flares['xray_size'][dist_ind]/10.)
+            print("Flare closest in distance:   ", xray_flares['date'][dist_ind], xray_flares['location'][dist_ind], xray_flares['xray_class'][dist_ind], xray_flares['xray_size'][dist_ind]/10.)
 
     penalty=0.0
     if time_ind!=None and xray_flares['location'][time_ind]!=None:
@@ -188,8 +191,8 @@ def determine_conf_best_flare(time_ind, big_ind, dist_ind, target_time, xray_fla
     
     #the logic for picking biggest flare or closest in time is in the routine determine_best_flare
     else: 
-        big_diff=abs(target_time-xray_flares['init_date'][big_ind])
-        time_diff=abs(target_time-xray_flares['init_date'][time_ind])
+        big_diff=abs(target_time-xray_flares['date'][big_ind])
+        time_diff=abs(target_time-xray_flares['date'][time_ind])
         big_size=xray_flares['xray_class'][big_ind]+str(xray_flares['xray_size'][big_ind]/10.)
         time_size=xray_flares['xray_class'][time_ind]+str(xray_flares['xray_size'][time_ind]/10.)
         time_match={"time_diff":time_diff, "size":time_size, "index":time_ind}
@@ -312,7 +315,7 @@ def create_datetime_cme(ymd, hm):
         year=int(datestr[0])
         month=int(datestr[1])
         day=int(datestr[2])
-        print(ihm)
+#        print(ihm)
         hms=ihm.split(":")
         hour=int(hms[0])
         minute=int(hms[1])
@@ -383,7 +386,8 @@ def read_hand_flares():
     data["init_date"]=create_datetime2(data["date"], data["start"])
     data["peak_date"]=create_datetime2(data["date"], data["peak"])
     data["final_date"]=create_datetime2(data["date"], data["end"])    
-    print("CHECK INIT", data["init_date"])
+
+    data["date"]=data["peak_date"]
     return data
     
 def read_hand_cmes():
@@ -419,11 +423,11 @@ def calc_loc_diff(flare_loc, dim_ns, dim_ew):
 
 def compare_flare_hand(target, auto, events, conf):
     hand_matches=read_hand_flares()   
-    print(target.keys())
+
     ind2=0
     mat=[]
     
-    for index in range(len(target["time"])):
+    for index in range(len(target["date"])):
 
 
         while target["dim_name"][index][0:13]!=hand_matches["dim_name"][ind2][0:13]:
@@ -434,7 +438,7 @@ def compare_flare_hand(target, auto, events, conf):
 
         mat.append(ind2)            
         
-    [same, diff, auto_nohand, hand_noauto, null] = calc_overall_stats(auto, conf, mat, events, hand_matches, target["dim_name"])       
+    [same, diff, auto_nohand, hand_noauto, null] = calc_overall_stats(auto['date'], conf, mat, hand_matches['date'], target["dim_name"])       
     
     print(" ")
     print(" ")
@@ -472,9 +476,10 @@ def compare_flare_hand(target, auto, events, conf):
 
 
     #take only events with location
+    auto_date=auto['date']
     for ind in range(len(is_location)):
         if is_location[ind]:
-            auto_loc.append(auto.loc[ind])
+            auto_loc.append(auto_date[ind])
             conf_loc.append(conf[ind])
             mat_loc.append(mat[ind])
             target_name_loc.append(target["dim_name"][ind])
@@ -485,7 +490,7 @@ def compare_flare_hand(target, auto, events, conf):
 #            target_name_noloc.append(target_name[ind])
             
     
-    [same, diff, auto_nohand, hand_noauto, null] = calc_overall_stats(auto_loc, conf_loc, mat_loc, events, hand_matches, target_name_loc)
+    [same, diff, auto_nohand, hand_noauto, null] = calc_overall_stats(auto_loc, conf_loc, mat_loc, hand_matches["date"], target_name_loc)
            
     print(" ")
     print(" ")
@@ -498,18 +503,98 @@ def compare_flare_hand(target, auto, events, conf):
     print("diff: ", diff)
     print("accuracy: ", 100*round((same+null)/(same+null+diff+hand_noauto+auto_nohand), 3), "%")
             
-#    [same, diff, auto_nohand, hand_noauto, null] = calc_overall_stats(auto_noloc, conf_noloc, mat_noloc, xray_flares, hand_matches, target_name_noloc)
-#       
-#    print(" ")
-#    print(" ")
-#    print("When we don't know the location")    
-#    print("Overall statistics")
-#    print("same flare: ", same)
-#    print("same null: ", null)
-#    print("hand match but no automated match", hand_noauto)
-#    print("automated match but no hand match", auto_nohand)
-#    print("diff: ", diff)
-#    print("accuracy: ", 100*round((same+null)/(same+null+diff+hand_noauto+auto_nohand), 3), "%")   
+    
+def compare_cme_hand(target, auto, events, conf):
+    hand_matches=read_hand_cmes()   
+#    print(target.keys())
+    ind2=0
+    mat=[]
+    
+    for index in range(len(target["date"])):
+
+
+        while target["dim_name"][index][0:13]!=hand_matches["dim_name"][ind2][0:13]:
+            ind2=ind2+1 
+
+            if ind2>len(hand_matches)-1:
+                break
+
+        mat.append(ind2)            
+        
+    [same, diff, auto_nohand, hand_noauto, null] = calc_overall_stats(auto['date'], conf, mat, hand_matches['date'], target["dim_name"])       
+    
+    print(" ")
+    print(" ")
+    print("Overall statistics")
+    print("same CME: ", same)
+    print("same null: ", null)
+    print("hand match but no automated match", hand_noauto)
+    print("automated match but no hand match", auto_nohand)
+    print("different CME: ", diff)
+    print("accuracy: ", 100*round((same+null)/(same+null+diff+hand_noauto+auto_nohand), 3), "%")
+ 
+    if event_type=="flares": # CMEs always have a location (mpa), so this is not relevant for them
+        #make a location mask
+        is_location=[]
+        for ind in range(len(auto)):
+            if ind==None: #if there is no match
+                is_location.append(False)  ###determines whether nulls go into no location or location piles
+            elif auto['PA'][ind]==None:
+                is_location.append(False)
+            else:
+                is_location.append(True)
+            
+    #    is_location=[False if x==None  else True for x in xray_flares['location'][auto]]
+    #    print(is_location)
+        auto_loc=[]
+        conf_loc=[]
+        mat_loc=[]
+        target_name_loc=[]
+        auto_noloc=[]
+        conf_noloc=[]
+        mat_noloc=[]
+        target_name_noloc=[]
+    
+        auto_date=auto['date']
+        #take only events with location
+        for ind in range(len(is_location)):
+            if is_location[ind]:
+                auto_loc.append(auto_date[ind])
+                conf_loc.append(conf[ind])
+                mat_loc.append(mat[ind])
+                target_name_loc.append(target["dim_name"][ind])
+    #        else:
+    #            auto_noloc.append(auto[ind])
+    #            conf_noloc.append(conf[ind])
+    #            mat_noloc.append(mat[ind])
+    #            target_name_noloc.append(target_name[ind])
+                
+    #    print("auto loc", auto_loc['date'])
+        [same, diff, auto_nohand, hand_noauto, null] = calc_overall_stats(auto_loc, conf_loc, mat_loc, hand_matches['date'], target_name_loc)
+               
+        print(" ")
+        print(" ")
+        print("When we know the location")    
+        print("Overall statistics")
+        print("same CME: ", same)
+        print("same null: ", null)
+        print("hand match but no automated match", hand_noauto)
+        print("automated match but no hand match", auto_nohand)
+        print("different CME: ", diff)
+        print("accuracy: ", 100*round((same+null)/(same+null+diff+hand_noauto+auto_nohand), 3), "%")
+    
+    #    [same, diff, auto_nohand, hand_noauto, null] = calc_overall_stats(auto_noloc, conf_noloc, mat_noloc, xray_flares, hand_matches, target_name_noloc)
+    #       
+    #    print(" ")
+    #    print(" ")
+    #    print("When we don't know the location")    
+    #    print("Overall statistics")
+    #    print("same flare: ", same)
+    #    print("same null: ", null)
+    #    print("hand match but no automated match", hand_noauto)
+    #    print("automated match but no hand match", auto_nohand)
+    #    print("diff: ", diff)
+    #    print("accuracy: ", 100*round((same+null)/(same+null+diff+hand_noauto+auto_nohand), 3), "%")   
     
 def flare_size(mag, size):
 
@@ -526,19 +611,29 @@ def flare_size(mag, size):
         return None        
            
         
-def match_dimmings_flaresCMEs(event_type='flares', max_hours=4, print_results=False, hand_compare=False):
-    dimmings=read_Lars_alldim()
+def match_dimmings_flaresCMEs(event_type='flares', print_results=False, hand_compare=False, training=False):
+
+    FDmaxDist=20
+    CDmaxAngle=45
+    Fmaxhours=2
+    Cmaxhours=2
+    if event_type=="flares":
+        timediff=timedelta(hours=Fmaxhours)
+    elif event_type=="cmes":
+        timediff=timedelta(hours=Cmaxhours)
+    
+    dimmings=read_Lars_alldim(training=training)
     if event_type=='flares':
         (events, ha_flares)=get_flare_catalog(2013, 2014)
-        events['date']=events['peak_date']  #this can be used to chose initial_date if needed
+        events['date']=events['peak_date']  #this can be used to chose initial_date if needed -- need to also change in read_hand_flares
     elif event_type == 'cmes':
         events=get_yashiro_catalog()
     else:
         print("not a valid event selection")
         
     #first check to make sure there is some overlap in dates
-    min_dimtime=min(dimmings['time'])
-    max_dimtime=max(dimmings['time'])
+    min_dimtime=min(dimmings['date'])
+    max_dimtime=max(dimmings['date'])
     
     min_event=min(events['date'])
     max_event=max(x for x in events['date'] if x is not None)
@@ -556,20 +651,20 @@ def match_dimmings_flaresCMEs(event_type='flares', max_hours=4, print_results=Fa
     target_time=[]
     target_name=[]
 
-    for ind1 in range(len(dimmings['time'])):
+    for ind1 in range(len(dimmings['date'])):
 
         dim_ew=dimmings['mean_EW'][ind1]
         dim_ns=dimmings['mean_NS'][ind1]
         
-        target_time.append(dimmings['time'][ind1])
+        target_time.append(dimmings['date'][ind1])
         target_name.append(dimmings['dim_name'][ind1])
 
         possibilities=[]
         distance=[]
 
         for ind2 in range(len(events['date'])):
-            timediff=timedelta(hours=max_hours)
-            dimtime=dimmings['time'][ind1]
+            
+            dimtime=dimmings['date'][ind1]
             eventtime=events['date'][ind2]
 
             if eventtime !=None and eventtime<(dimtime+timediff) and eventtime>(dimtime-timediff):
@@ -579,7 +674,7 @@ def match_dimmings_flaresCMEs(event_type='flares', max_hours=4, print_results=Fa
 
                     dist=calc_loc_diff(event_loc, dim_ns, dim_ew)
 
-                    if dist == None or dist<30:
+                    if dist == None or dist<FDmaxDist:
                         possibilities.append(ind2)
                         distance.append(dist)
                 if event_type=='cmes':
@@ -588,11 +683,11 @@ def match_dimmings_flaresCMEs(event_type='flares', max_hours=4, print_results=Fa
 
                     pa_diff=abs(cme_pa-dim_pa)
 
-                    if pa_diff == None or pa_diff<30:
+                    if pa_diff == None or pa_diff<CDmaxAngle:
                         possibilities.append(ind2)
                         distance.append(pa_diff)
                         
-        if len(possibilities)==0: #no flares in 4 hours before or after dimming
+        if len(possibilities)==0: #if no flare/cme Fmaxhours before or after dimming
             match_time.append(None)
             match_dist.append(None)
             match_big.append(None)
@@ -638,10 +733,6 @@ def match_dimmings_flaresCMEs(event_type='flares', max_hours=4, print_results=Fa
                     
             if len(dist)>0 and dist_exists: 
                 shortest_dist=dist.index(min(dist))
-                #require within 30 degrees
-                if shortest_dist>30:
-                    print("does this ever happen?  It should get caught above")
-                    shortest_dist=None
             else:
                 shortest_dist=None
 
@@ -656,12 +747,9 @@ def match_dimmings_flaresCMEs(event_type='flares', max_hours=4, print_results=Fa
 
     conf=[]
     auto=[]
-#    print("events.keys", events.keys())
     nulls=[None for x in events.keys()] #fill value for events with no matches
 
     
-#    print("len target time", len(target_time))
-#    print("len dimmings", len(dimmings["time"]))
     #initialize match dataframe
     if event_type=="flares":
         (best, confidence)= determine_conf_best_flare(match_time[0], match_big[0], match_dist[0], target_time[0], events)
@@ -687,50 +775,16 @@ def match_dimmings_flaresCMEs(event_type='flares', max_hours=4, print_results=Fa
 
     matches=pd.DataFrame(matches, columns=events.keys())
 
-    if print_results==True:
+    if print_results==True and event_type=="flares":
+        print_summary_flares(dimmings, events, matches, hand=hand_compare)#, event_type=event_type)
+    elif print_results==True and event_type=="cmes":
+        print_summary_cmes(dimmings, events, matches, hand=hand_compare)
 
-        print_events(matches, dimmings)
-    
-    if hand_compare==True:
+    if hand_compare==True and event_type=="flares":
         compare_flare_hand(dimmings, matches, events, conf)
+    elif hand_compare==True and event_type=="cmes":
+        compare_cme_hand(dimmings, matches, events, conf)
     return matches
-    
-
-    
-def print_events(auto, dimmings, hand=True, event_type="flares"):
-    if hand==True and event_type=="flares":
-        hand_matches=read_hand_flares()
-    if hand==True and event_type=="cmes":
-        hand_matches=read_hand_cmes()
-    print("auto vals", hand_matches.keys())
-#    print(len(auto["date"]), len(dimmings["time"]))
-    if len(auto["date"])!=len(dimmings["time"]):
-        print("what!? Auto and dimmings are not the same length.  This sucks!!")
-    for index in range(len(auto["date"])):
-        print("  ")
-        dim=dimmings.iloc[[index]]
-        au=auto.iloc[[index]]
-        print("Dimming", dim["dim_name"].values[0])#.tolist())
-        if event_type=="flares":
-#            print(au["peak_date"].values[0])
-            if pd.isnull(au["peak_date"].values[0]):  #how to check for NaTs! evaluates to true if it is an NaT
-                print("Auto match: None")
-            else:
-                print("Auto match", pd.to_datetime(au["peak_date"].values[0]).strftime("%Y-%m-%d %H:%M"), au["xray_class"].values[0], au["xray_size"].values[0]/10., au["location"].values[0])#.tolist())
-
-        elif event_type=="cmes":
-            print("Auto match", au["date"].values[0], au["PA"].values[0], au["width"].values[0])#.tolist()  
-        if hand==True:
-            hand_mat=hand_matches.iloc[[index]]
-            print("hand_mat", hand_mat)
-            try:
-                print("hand match", pd.to_datetime(hand_mat["date"].values[0]).strftime("%Y-%m-%d %H:%M"), hand_mat["flare_class"].values[0], hand_mat["flare_size"].values[0])#.tolist())
-#            if hand_mat["date"].values[0] == np.datetime64('NaT'):
-            except:
-                print("Hand match: None")
-#            else:                
-#                print("hand match", pd.to_datetime(hand_mat["date"].values[0]).strftime("%Y-%m-%d %H:%M"), hand_mat["flare_class"].values[0], hand_mat["flare_size"].values[0])#.tolist())
-
     
         
 def coord2pa(ew_coord, ns_coord):
@@ -750,227 +804,8 @@ def coord2pa(ew_coord, ns_coord):
         pa=-1
 
     return pa
-        
-    
-    
-def match_dimmings_CME():
-    dimmings=read_Lars_alldim()
-    hand_matches=read_hand_cmes()
-    
-#    print(type(dimmings))
-    cmes=get_yashiro_catalog()
-#    print("!!!!", xray_flares['peak_time'])
-    #first check to make sure there is some overlap in dates
-#    print("dimming time", dimmings['time'])
-    min_dimtime=min(dimmings['time'])
-    max_dimtime=max(dimmings['time'])
-
-    
-    min_cme=min(cmes['date'])
-    max_cme=max(x for x in cmes['date'] if x is not None)
-    
-    print("cme times", min_cme, max_cme)
-    print("dimming times", min_dimtime, max_dimtime)
-    
-    if ((min_cme<min_dimtime and max_cme>min_dimtime) or (min_cme<max_dimtime and max_cme>max_dimtime)):
-        print("we have overlap!")
-
-    #let's start with stepping through the dimmings
-    match_time=[]
-    match_dist=[]
-    target_time=[]
-    target_loc=[]
-    dist_time=[]
-    dist_loc=[]
-    time_time=[]
-    time_loc=[]
-    target_name=[]
-
-    
-    for ind1 in range(len(dimmings['time'])):
-        print("   ")
-        print("   ")
-        dim_ew=dimmings['mean_EW'][ind1]
-        dim_ns=dimmings['mean_NS'][ind1]
-        dim_pa=int(round(coord2pa(dim_ew, dim_ns)))
-
-        
-        target_time.append(dimmings['time'][ind1])
-        target_name.append(dimmings['dim_name'][ind1])
-        target_loc.append(dim_pa)
-
-        possibilities=[]
-        for ind2 in range(len(cmes['date'])):
-            timediff=timedelta(hours=4)
-            dimtime=dimmings['time'][ind1]
-            cmetime=cmes['date'][ind2]
-
-            if cmetime !=None and cmetime<(dimtime+timediff) and cmetime>(dimtime-timediff):
-                #now check location
-                cme_pa=int(cmes['mpa'][ind2])
-
-                pa_diff=abs(cme_pa-dim_pa)
-
-                if pa_diff == None or pa_diff<30:
-                    possibilities.append(ind2)
-
-        if len(possibilities)==0:
-            print("no matching cmes")
-            match_time.append(None)
-            match_dist.append(None)
-        elif len(possibilities)==1:
-            print("one matching cme")
-            
-            x=possibilities[0]
-            cme_pa=int(cmes['mpa'][x])
-            print("cme PA", cme_pa)
-
-            print("cme time", cmes['date'][x])
-            print("cme_width", cmes['width'][x])
-            pa_diff=abs(cme_pa-dim_pa)
-            print("time diff", dimtime - cmes['date'][x])
-
-            match_time.append(possibilities[0])
-            match_dist.append(possibilities[0])
-        elif len(possibilities)>1:
-            print("possible flare summary:")
-            pa_diff=[]
-            time_diff=[]
-
-            for x in possibilities:
-                CME_pa=int(cmes['mpa'][x])
-
-                print("cme PA", CME_pa)
-                print("cme time", cmes['date'][x])
-                print("cme_width", cmes['width'][x])
-                pa_diff_val=abs(CME_pa-dim_pa)
-                t_diff=(dimtime - cmes['date'][x])
-                time_diff.append(round((t_diff.days*86400+t_diff.seconds)/60./60., 2))
-                pa_diff.append(pa_diff_val)
-
-          
-            print("event summary")
-            print("pa diffs: ", pa_diff)
-
-
-            tdiff_absfloat=[abs(float(x)) for x in time_diff]
-            shortest_time=tdiff_absfloat.index(min(tdiff_absfloat))
-            #the following is not exactly right -- it's an approximation
-            #need to put in equations for great circle angle
-            #set distance to 9999 when there is no location information
-
-            if len(pa_diff)>0: 
-                shortest_pa=pa_diff.index(min(pa_diff))
-                #require within 30 degrees
-                if shortest_pa>30:
-                    shortest_pa=None
-            else:
-                shortest_dist=None
-            if min(pa_diff)==9999: shortest_dist=None
-            print("shortest_time", shortest_time)
-            print("shortest_pa", shortest_pa)
-
-            match_time.append(possibilities[shortest_time])
-            if shortest_pa==None or shortest_pa==shortest_time:
-                match_dist.append(None)
-            else:
-                match_dist.append(possibilities[shortest_pa])            
-#    
-#    
-#    ind2=0
-#    diff=0
-#    hand_noauto=0
-#    auto_nohand=0
-#    same=0
-#    null=0
-
-#    for index in range(len(target_time)): 
-#
-#        while target_name[index][0:13]!=hand_matches["dim_name"][ind2][0:13]:
-#            ind2=ind2+1 
-#
-#
-##        print("Target dimming:", target_name[index], target_time[index], target_loc[index])
-#
-#        if match_time[index]!=None:
-##            print("Best flare based on time")
-#
-##            pa=cmes['pa'][match_time[index]]
-#
-#            print("CME closest in time:       ", cmes['date'][match_time[index]], cmes['PA'][match_time[index]], cmes['width'][match_time[index]])#, xraysize)#, xray_flares['xray_class'][match_time[index]], xray_flares['xray_size'][match_time[index]])
-#        else:
-#            print("No cme match")
-#            if match_dist[index]!=None:
-#                print("What?? There's a problem here")
-#        if match_dist[index]!=None:
-##            print(match_dist[index])
-#            print("CME closest in distance:   ", cmes['date'][match_dist[index]], cmes['PA'][match_dist[index]], cmes['width'][match_time[index]])
-#
-#        else:
-#            print("No CME match based on distance")  
-#        mat=hand_matches["date"][ind2]
-#
-#
-#        if is_nat(mat)==False and match_time[index]!=None:
-#
-#            init=cmes["date"][match_time[index]]
-#            cme_PA=cmes["PA"][match_time[index]]
-#            hand_PA=hand_matches["PA"][index]
-#
-#            if pd.isnull(hand_PA):
-#                hand_PA="no location"
-#
-#            hand_cme=hand_matches["width"][index]
-#            print("auto match CME:            ", init, cme_PA)
-#            print("hand match CME:            ", mat, hand_PA, hand_cme)
-#
-#            
-#            if init==mat:
-#                print("SAME")
-#                same+=1
-#            else:
-#                print("DIFFERENT!!")
-#                diff+=1
-#        elif is_nat(mat)==True and match_time[index]!=None:
-#            print("automated match but no hand match")
-#            auto_nohand+=1
-#        elif is_nat(mat)==False and match_time[index]==None:
-#            print("hand match but no automated match")
-#            hand_noauto+=1
-#        elif is_nat(mat)==True and match_time[index]==None:
-#            print("no hand or auto match")
-#            null+=1
-            
-
-    for index in range(len(target_time)): 
-
-        while target_name[index][0:13]!=hand_matches["dim_name"][ind2][0:13]:
-            ind2=ind2+1 
-
-        mat.append(ind2)
-
-        (best, confidence)=determine_conf_best_CME(match_time[index], match_big[index], match_dist[index], target_time[index], cmes)
-
-        conf.append(confidence)
-        auto.append(best)
-        
-            
-        
-    [same, diff, auto_nohand, hand_noauto, null] = calc_overall_stats(auto, conf, mat, cmes, hand_matches, target_name)       
-    
-            
-    print(" ")
-    print(" ")
-    print("Overall statistics")
-    print("same CME: ", same)
-    print("same null: ", null)
-    print("hand match but no automated match", hand_noauto)
-    print("automated match but no hand match", auto_nohand)
-    print("diff: ", diff)
-    print("accuracy: ", (same+null)/(same+null+diff+hand_noauto+auto_nohand))
-    
           
 #match_dimmings_CME()
-auto_matches=match_dimmings_flaresCMEs(event_type='flares', print_results=True, hand_compare=True)
+auto_matches=match_dimmings_flaresCMEs(event_type='flares', print_results=True, hand_compare=True, training=False)
 #print_events(auto_matches, dimmings)
     

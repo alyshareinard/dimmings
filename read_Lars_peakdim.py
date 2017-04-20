@@ -19,12 +19,12 @@ def read_Lars_alldim(training=False):
     
 #    print("root", rootdir)
   #  dim_num=[]
-    area_mm=[]
+
     time=[]
-    east_coos=[]
-    west_coos=[]
-    north_coos=[]
-    south_coos=[]
+    latloc=[]
+    longloc=[]
+    area_mm
+    peakeuv=[]
     dim_name=[]
     if os.sep=="/":
         osdir=os.path.join("/Users", "alyshareinard", "Dropbox", "Work")
@@ -45,24 +45,26 @@ def read_Lars_alldim(training=False):
     count=0
     print("!!!!!!!!", training, training_number, len(files))
     for file in files:
-        if "_alldim_props" in file:
+        if "_peakdim_props" in file:
             print("reading", file)
             count+=1
 
             if training == True and count>training_number:
                 print("half of dimmings returned for testing")
                 break
-            data=readsav(rootdir+file) #contains dim_name, area_mm, time, euv_min, bz_mean, absbz_mean, bz_max, north_coos, south_coos, east_coos, west_coos
-#            print(data)
-            try:
-                data=data['alldim']
-            except:
-                data=data['dimall']
-
+            data=readsav(rootdir+file) #contains dim_name, peak_time, peak_euv_mean, peakeuv_max, peakeuv_min, peakbz_mean, peakabsbz_mean, peakbz_max
+            #peakbz_min, peakarea_mm, ascend_period, descend_period, lifetime_hrs, peaktime_latloc, peaktime_longloc
+            print(data)
+#            try:
+#                data=data['alldim']
+#            except:
+#                data=data['dimall']
+            data=data['dimming']
             name=data.dim_name[0].decode('utf-8')
 #            print("name", name)#.decode('utf-8'))
-            area=data.area_mm[0][0]
-            east=data.east_coos[0][0]
+            print("latloc? ", data.peaktime_longloc[0][0])
+            area=data.peakarea_mm[0][0]
+            east=data.east_coos[0][0]  ###!!!!start adjusting here
             west=data.west_coos[0][0]
             north=data.north_coos[0][0]
             south=data.south_coos[0][0]

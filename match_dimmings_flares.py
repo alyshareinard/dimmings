@@ -99,11 +99,11 @@ def print_summary_cmes(dimming_vals, cme_vals, matches, hand=False):
         print("  ")
         print("Target dimming ", dimming["dim_name"], dimming["date"], dimming["mean_EW"], dimming["mean_NS"])   
         
-        print("Auto match flare: ", auto["date"], auto["PA"], auto["width"])
+        print("Auto match CME: ", auto["date"], auto["PA"], auto["width"])
         
         if hand==True:
             hand_mat=hand_matches.loc[ind]
-            print("Hand match flare: ", hand_mat["date"], hand_mat["PA"], hand_mat["width"])
+            print("Hand match CME: ", hand_mat["date"], hand_mat["PA"], hand_mat["width"])
     
             if pd.isnull(hand_mat["date"]) and pd.isnull(auto["date"]):
                 print("Same NULL")
@@ -532,69 +532,58 @@ def compare_cme_hand(target, auto, events, conf):
     print("automated match but no hand match", auto_nohand)
     print("different CME: ", diff)
     print("accuracy: ", 100*round((same+null)/(same+null+diff+hand_noauto+auto_nohand), 3), "%")
- 
-    if event_type=="flares": # CMEs always have a location (mpa), so this is not relevant for them
-        #make a location mask
-        is_location=[]
-        for ind in range(len(auto)):
-            if ind==None: #if there is no match
-                is_location.append(False)  ###determines whether nulls go into no location or location piles
-            elif auto['PA'][ind]==None:
-                is_location.append(False)
-            else:
-                is_location.append(True)
+
+#    is_location=[False if x==None  else True for x in xray_flares['location'][auto]]
+#    print(is_location)
+    auto_loc=[]
+    conf_loc=[]
+    mat_loc=[]
+    target_name_loc=[]
+    auto_noloc=[]
+    conf_noloc=[]
+    mat_noloc=[]
+    target_name_noloc=[]
+
+    auto_date=auto['date']
+    #take only events with location
+    for ind in range(len(is_location)):
+        if is_location[ind]:
+            auto_loc.append(auto_date[ind])
+            conf_loc.append(conf[ind])
+            mat_loc.append(mat[ind])
+            target_name_loc.append(target["dim_name"][ind])
+#        else:
+#            auto_noloc.append(auto[ind])
+#            conf_noloc.append(conf[ind])
+#            mat_noloc.append(mat[ind])
+#            target_name_noloc.append(target_name[ind])
             
-    #    is_location=[False if x==None  else True for x in xray_flares['location'][auto]]
-    #    print(is_location)
-        auto_loc=[]
-        conf_loc=[]
-        mat_loc=[]
-        target_name_loc=[]
-        auto_noloc=[]
-        conf_noloc=[]
-        mat_noloc=[]
-        target_name_noloc=[]
-    
-        auto_date=auto['date']
-        #take only events with location
-        for ind in range(len(is_location)):
-            if is_location[ind]:
-                auto_loc.append(auto_date[ind])
-                conf_loc.append(conf[ind])
-                mat_loc.append(mat[ind])
-                target_name_loc.append(target["dim_name"][ind])
-    #        else:
-    #            auto_noloc.append(auto[ind])
-    #            conf_noloc.append(conf[ind])
-    #            mat_noloc.append(mat[ind])
-    #            target_name_noloc.append(target_name[ind])
-                
-    #    print("auto loc", auto_loc['date'])
-        [same, diff, auto_nohand, hand_noauto, null] = calc_overall_stats(auto_loc, conf_loc, mat_loc, hand_matches['date'], target_name_loc)
-               
-        print(" ")
-        print(" ")
-        print("When we know the location")    
-        print("Overall statistics")
-        print("same CME: ", same)
-        print("same null: ", null)
-        print("hand match but no automated match", hand_noauto)
-        print("automated match but no hand match", auto_nohand)
-        print("different CME: ", diff)
-        print("accuracy: ", 100*round((same+null)/(same+null+diff+hand_noauto+auto_nohand), 3), "%")
-    
-    #    [same, diff, auto_nohand, hand_noauto, null] = calc_overall_stats(auto_noloc, conf_noloc, mat_noloc, xray_flares, hand_matches, target_name_noloc)
-    #       
-    #    print(" ")
-    #    print(" ")
-    #    print("When we don't know the location")    
-    #    print("Overall statistics")
-    #    print("same flare: ", same)
-    #    print("same null: ", null)
-    #    print("hand match but no automated match", hand_noauto)
-    #    print("automated match but no hand match", auto_nohand)
-    #    print("diff: ", diff)
-    #    print("accuracy: ", 100*round((same+null)/(same+null+diff+hand_noauto+auto_nohand), 3), "%")   
+#    print("auto loc", auto_loc['date'])
+    [same, diff, auto_nohand, hand_noauto, null] = calc_overall_stats(auto_loc, conf_loc, mat_loc, hand_matches['date'], target_name_loc)
+           
+    print(" ")
+    print(" ")
+    print("When we know the location")    
+    print("Overall statistics")
+    print("same CME: ", same)
+    print("same null: ", null)
+    print("hand match but no automated match", hand_noauto)
+    print("automated match but no hand match", auto_nohand)
+    print("different CME: ", diff)
+    print("accuracy: ", 100*round((same+null)/(same+null+diff+hand_noauto+auto_nohand), 3), "%")
+
+#    [same, diff, auto_nohand, hand_noauto, null] = calc_overall_stats(auto_noloc, conf_noloc, mat_noloc, xray_flares, hand_matches, target_name_noloc)
+#       
+#    print(" ")
+#    print(" ")
+#    print("When we don't know the location")    
+#    print("Overall statistics")
+#    print("same flare: ", same)
+#    print("same null: ", null)
+#    print("hand match but no automated match", hand_noauto)
+#    print("automated match but no hand match", auto_nohand)
+#    print("diff: ", diff)
+#    print("accuracy: ", 100*round((same+null)/(same+null+diff+hand_noauto+auto_nohand), 3), "%")   
     
 def flare_size(mag, size):
 

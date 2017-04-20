@@ -45,7 +45,7 @@ def read_Lars_alldim(training=False):
     count=0
     print("!!!!!!!!", training, training_number, len(files))
     for file in files:
-        if "_alldim_props" in file:
+        if "_peakdim_props" in file:
             print("reading", file)
             count+=1
 
@@ -53,7 +53,7 @@ def read_Lars_alldim(training=False):
                 print("half of dimmings returned for testing")
                 break
             data=readsav(rootdir+file) #contains dim_name, area_mm, time, euv_min, bz_mean, absbz_mean, bz_max, north_coos, south_coos, east_coos, west_coos
-#            print(data)
+            print(data)
             try:
                 data=data['alldim']
             except:

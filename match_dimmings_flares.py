@@ -5,15 +5,17 @@ Created on Tue May  3 16:02:21 2016
 @author: alyshareinard
 """
 
-import sys
-from datetime import timedelta
+from datetime import timedelta, datetime
 import math
 import os
 import numpy as np
 import pandas as pd
-#import read_Lars_dimmings
+import get_yashiro_catalog as CMEs
+from get_flare_catalog import get_flare_catalog
+from read_Lars_peakdim import read_Lars_peakdim
 
-sys.path.append('../common/')
+global data_path
+data_path=os.path.join(os.path.dirname(os.path.realpath(__file__)), "data")
 
 def determine_best_flare(time_match, big_match, verbose=False):
     """This is where the logic is for choosing the best flare when the flare 
@@ -125,7 +127,6 @@ def calc_overall_stats(best, conf, mat, hand_matches, target):
     auto_nohand=0
     hand_noauto=0
     null=0
-
             
     for ind in range(len(best)):  #step through the matches
 
@@ -199,8 +200,7 @@ def determine_conf_best_flare(time_ind, big_ind, dist_ind, target_time, xray_fla
         big_match={"time_diff":big_diff, "size":big_size, "index":big_ind}
 
         (best_match, conf)=determine_best_flare(time_match, big_match, verbose=False)
-        conf=conf-penalty
-        
+        conf=conf-penalty 
         
     conf=math.floor(conf*10)/10.
     if verbose==True:
@@ -372,13 +372,9 @@ def create_datetime2(ymd, hm):
     return date
     
 def read_hand_flares():
-    """reads in file containing the flares matches chosen by hand"""
+    """reads in file containing the flares chosen by hand"""
+    file=os.path.join(data_path, "dim_flare_hand.txt")
     
-    if os.sep=="/":
-        osdir=os.path.join("/Users", "alyshareinard", "Dropbox", "Work")
-    else:
-        osdir=os.path.join("C:"+os.sep+"Users", "alysha.reinard", "Documents")
-    file=os.path.join(osdir, "data", "Lars dimmings", "dim_flare_hand.txt")
     names=["dim_name", "date", "start", "end", "peak", "loc", "flare_class", 
     "flare_size", "station", "something", "AR", "LarAR"]
     data=pd.read_csv(file, sep=" ", header=None, names=names)
@@ -390,13 +386,11 @@ def read_hand_flares():
     data["date"]=data["peak_date"]
     return data
     
-def read_hand_cmes():
+def read_hand_cmes(filepath):
     """reads in file containing the CMEs chosen by hand"""
-    if os.sep=="/":
-        osdir=os.path.join("/Users", "alyshareinard", "Dropbox", "Work")
-    else:
-        osdir=os.path.join("C:"+os.sep+"Users", "alysha.reinard", "Documents")
-    file=os.path.join(osdir, "data", "Lars dimmings", "dim_cme_hand.txt")
+
+    file=os.path.join(data_path, "dim_cme_hand.txt")
+    
     names=["dim_name", "date", "time", "PA", "width", "speed_lin", "speed_20init", 
     "speed_20final", "speed_2020", "accel", "mass", "ke", "mpa"]
     data=pd.read_csv(file, sep=" ", header=None, names=names)
@@ -471,10 +465,6 @@ def compare_flare_hand(target, auto, events, conf):
     mat_noloc=[]
     target_name_noloc=[]
 
-#    print(xray_flares['location'][auto])
-
-
-
     #take only events with location
     auto_date=auto['date']
     for ind in range(len(is_location)):
@@ -532,45 +522,45 @@ def compare_cme_hand(target, auto, events, conf):
     print("automated match but no hand match", auto_nohand)
     print("different CME: ", diff)
     print("accuracy: ", 100*round((same+null)/(same+null+diff+hand_noauto+auto_nohand), 3), "%")
-
-#    is_location=[False if x==None  else True for x in xray_flares['location'][auto]]
-#    print(is_location)
-    auto_loc=[]
-    conf_loc=[]
-    mat_loc=[]
-    target_name_loc=[]
-    auto_noloc=[]
-    conf_noloc=[]
-    mat_noloc=[]
-    target_name_noloc=[]
-
-    auto_date=auto['date']
-    #take only events with location
-    for ind in range(len(is_location)):
-        if is_location[ind]:
-            auto_loc.append(auto_date[ind])
-            conf_loc.append(conf[ind])
-            mat_loc.append(mat[ind])
-            target_name_loc.append(target["dim_name"][ind])
-#        else:
-#            auto_noloc.append(auto[ind])
-#            conf_noloc.append(conf[ind])
-#            mat_noloc.append(mat[ind])
-#            target_name_noloc.append(target_name[ind])
-            
-#    print("auto loc", auto_loc['date'])
-    [same, diff, auto_nohand, hand_noauto, null] = calc_overall_stats(auto_loc, conf_loc, mat_loc, hand_matches['date'], target_name_loc)
-           
-    print(" ")
-    print(" ")
-    print("When we know the location")    
-    print("Overall statistics")
-    print("same CME: ", same)
-    print("same null: ", null)
-    print("hand match but no automated match", hand_noauto)
-    print("automated match but no hand match", auto_nohand)
-    print("different CME: ", diff)
-    print("accuracy: ", 100*round((same+null)/(same+null+diff+hand_noauto+auto_nohand), 3), "%")
+#
+##    is_location=[False if x==None  else True for x in xray_flares['location'][auto]]
+##    print(is_location)
+#    auto_loc=[]
+#    conf_loc=[]
+#    mat_loc=[]
+#    target_name_loc=[]
+#    auto_noloc=[]
+#    conf_noloc=[]
+#    mat_noloc=[]
+#    target_name_noloc=[]
+#
+#    auto_date=auto['date']
+#    #take only events with location  -- might need this for mass
+#    for ind in range(len(is_location)):
+#        if is_location[ind]:
+#            auto_loc.append(auto_date[ind])
+#            conf_loc.append(conf[ind])
+#            mat_loc.append(mat[ind])
+#            target_name_loc.append(target["dim_name"][ind])
+##        else:
+##            auto_noloc.append(auto[ind])
+##            conf_noloc.append(conf[ind])
+##            mat_noloc.append(mat[ind])
+##            target_name_noloc.append(target_name[ind])
+#            
+##    print("auto loc", auto_loc['date'])
+#    [same, diff, auto_nohand, hand_noauto, null] = calc_overall_stats(auto_loc, conf_loc, mat_loc, hand_matches['date'], target_name_loc)
+#           
+#    print(" ")
+#    print(" ")
+#    print("When we know the location")    
+#    print("Overall statistics")
+#    print("same CME: ", same)
+#    print("same null: ", null)
+#    print("hand match but no automated match", hand_noauto)
+#    print("automated match but no hand match", auto_nohand)
+#    print("different CME: ", diff)
+#    print("accuracy: ", 100*round((same+null)/(same+null+diff+hand_noauto+auto_nohand), 3), "%")
 
 #    [same, diff, auto_nohand, hand_noauto, null] = calc_overall_stats(auto_noloc, conf_noloc, mat_noloc, xray_flares, hand_matches, target_name_noloc)
 #       
@@ -611,12 +601,12 @@ def match_dimmings_flaresCMEs(event_type='flares', print_results=False, hand_com
     elif event_type=="cmes":
         timediff=timedelta(hours=Cmaxhours)
     
-    dimmings=read_Lars_alldim(training=training)
+    dimmings=read_Lars_peakdim(data_path, training=training)
     if event_type=='flares':
-        (events, ha_flares)=get_flare_catalog(2013, 2014)
+        (events, ha_flares)=get_flare_catalog(data_path, 2013, 2014)
         events['date']=events['peak_date']  #this can be used to chose initial_date if needed -- need to also change in read_hand_flares
     elif event_type == 'cmes':
-        events=get_yashiro_catalog()
+        events=CMEs.get_yashiro_catalog(data_path)
     else:
         print("not a valid event selection")
         
@@ -794,7 +784,8 @@ def coord2pa(ew_coord, ns_coord):
 
     return pa
           
-#match_dimmings_CME()
+
+print("data path", data_path)
 auto_matches=match_dimmings_flaresCMEs(event_type='flares', print_results=True, hand_compare=True, training=False)
 #print_events(auto_matches, dimmings)
     

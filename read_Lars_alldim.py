@@ -10,7 +10,6 @@ sys.path.append('../common/')
 from scipy.io.idl import readsav
 import os
 import pandas as pd
-from datetime import datetime, timezone
 from sunpy_time import parse_time
 
 def read_Lars_alldim(training=False):

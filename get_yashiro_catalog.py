@@ -21,5 +21,12 @@ def get_yashiro_catalog(data_path=os.path.join(os.path.dirname(os.path.realpath(
         date.append(datetime(int(ymd[0]), int(ymd[1]), int(ymd[2]), cmes["hour"][i], cmes["minute"][i]))#, cmes["sec"][i]))
     
     cmes["date"]=date
+#    print(cmes["mass"])
+    cmes["mass"]=cmes["mass"].replace("-------", "-1")
+    
+#    cmes["mass"]=float(cmes["mass"])
+    cmes.mass=cmes.mass.astype(float)
+#    print(type(cmes["mass"][0]))
     return cmes
 
+get_yashiro_catalog()

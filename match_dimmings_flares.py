@@ -46,9 +46,9 @@ def determine_best_cme(time_match, big_match, verbose=False):
     time (time_size) and the indices for each (big_ind and time_ind)"""
     
     if verbose==True:
-        print("Time difference from biggest flare to dimming: ", big_match["time_diff"])
-        print("Time difference from closest flare in time to dimming: ", time_match["time_diff"])
-    if big_match["time_diff"]<timedelta(hours=0): #if the biggest is less than 0 hour from dimming start time, it's the best one
+        print("Time difference from biggest cme to dimming: ", big_match["time_diff"])
+        print("Time difference from closest cme in time to dimming: ", time_match["time_diff"])
+    if big_match["time_diff"]<timedelta(hours=1): #if the biggest is less than 1 hour from dimming start time, it's the best one
         best_match=big_match["index"]
 
     else:
@@ -62,10 +62,11 @@ def print_summary_flares(dimming_vals, flare_vals, matches, hand=False):
     """input is the dimming, flare and (optional) the hand matches
     routine prints the dimming and the matching flare values and the 
     hand match (if present)"""
+    
     if hand==True:
         hand_matches=read_hand_flares()
 
-    for ind in range(len(dimming_vals)):  #step through the matches
+    for ind in range(len(dimming_vals)):  #step through the dimmings
         dimming=dimming_vals.loc[ind]
         auto=matches.loc[ind]
         print("  ")
@@ -92,16 +93,17 @@ def print_summary_cmes(dimming_vals, cme_vals, matches, hand=False):
     """input is the dimming, flare and (optional) the hand matches
     routine prints the dimming and the matching flare values and the 
     hand match (if present)"""
+    
     if hand==True:
         hand_matches=read_hand_cmes()
 
-    for ind in range(len(dimming_vals)):  #step through the matches
+    for ind in range(len(dimming_vals)):  #step through the dimmings
         dimming=dimming_vals.loc[ind]
         auto=matches.loc[ind]
         print("  ")
         print("Target dimming ", dimming["dim_name"], dimming["date"], dimming["mean_EW"], dimming["mean_NS"])   
         
-        print("Auto match CME: ", auto["date"], auto["PA"], auto["width"])
+        print("Auto match CME: ", auto["date"], auto["PA"], auto["width"], auto["mass"])
         
         if hand==True:
             hand_mat=hand_matches.loc[ind]
@@ -119,8 +121,7 @@ def print_summary_cmes(dimming_vals, cme_vals, matches, hand=False):
                 print("Different CME")
        
 def calc_overall_stats(best, conf, mat, hand_matches, target):
-    """calculates the number of auto matches that are the same as the hand-
-    selected matches"""
+    """calculates stats for auto vs hand selected matches"""
     
     same=0
     diff=0
@@ -159,13 +160,16 @@ def calc_overall_stats(best, conf, mat, hand_matches, target):
     return ([same, diff, auto_nohand, hand_noauto, null])
 
 def determine_conf_best_flare(time_ind, big_ind, dist_ind, target_time, xray_flares, verbose=False):
-    #determine confidence level
+    """takes a given dimming with possible flare matches, makes a rough calculation of the confidence 
+    of the final match based on whether the largest/biggest/closest flares are the same or not
+    and runs the routine that finds the best flare"""
 
     if time_ind==None:
-#        print("No matching flare")
+        if verbose:
+            print("No matching flare")
         return (None, -1)
     
-    if verbose==True:
+    if verbose:
         print("Flare closest in time:       ", xray_flares['date'][time_ind], xray_flares['location'][time_ind], xray_flares['xray_class'][time_ind], xray_flares['xray_size'][time_ind]/10.)
         if big_ind==None:
             print("no largest flare")
@@ -203,12 +207,14 @@ def determine_conf_best_flare(time_ind, big_ind, dist_ind, target_time, xray_fla
         conf=conf-penalty 
         
     conf=math.floor(conf*10)/10.
-    if verbose==True:
+    if verbose:
         print("CONFIDENCE LEVEL", conf)
     return(best_match, conf)
     
 def determine_conf_best_cme(time_ind, big_ind, dist_ind, target_time, cmes, verbose=False):
-    #determine confidence level
+    """takes a given dimming with possible cme matches, makes a rough calculation of the confidence 
+    of the final match based on whether the largest/biggest/closest flares are the same or not
+    and runs the routine that finds the best cme"""
 
     if time_ind==None:
 #        print("No matching flare")
@@ -272,7 +278,6 @@ def find_mag_bigger(mag1, mag2):
     else:
         return True
 
-
 def find_largest_flare(fl_mag, fl_size):
     """from lists of flare magnitude and flare size the program returns the 
     index of the largest flare.  This works for lists of any size"""
@@ -328,8 +333,8 @@ def create_datetime_cme(ymd, hm):
             date.append(None)
     return date
       
-def create_datetime2(ymd, hm):
-    """create datetime for CME data"""
+def create_datetime_flare(ymd, hm):
+    """create datetime for hand selected flare data"""
     
     date=[]
     #unpack ymd and fix year
@@ -379,14 +384,14 @@ def read_hand_flares():
     "flare_size", "station", "something", "AR", "LarAR"]
     data=pd.read_csv(file, sep=" ", header=None, names=names)
 
-    data["init_date"]=create_datetime2(data["date"], data["start"])
-    data["peak_date"]=create_datetime2(data["date"], data["peak"])
-    data["final_date"]=create_datetime2(data["date"], data["end"])    
+    data["init_date"]=create_datetime_flare(data["date"], data["start"])
+    data["peak_date"]=create_datetime_flare(data["date"], data["peak"])
+    data["final_date"]=create_datetime_flare(data["date"], data["end"])    
 
     data["date"]=data["peak_date"]
     return data
     
-def read_hand_cmes(filepath):
+def read_hand_cmes():
     """reads in file containing the CMEs chosen by hand"""
 
     file=os.path.join(data_path, "dim_cme_hand.txt")
@@ -400,6 +405,8 @@ def read_hand_cmes(filepath):
     return data
 
 def calc_loc_diff(flare_loc, dim_ns, dim_ew):
+    """takes a flare coordinate location and a dimming NS and EW and determines
+    the cartesian distance between the dimming and flare"""
     if flare_loc !=None:   
         ns=int(flare_loc[1:3])
         if flare_loc[0]=="S": ns=-ns
@@ -416,14 +423,14 @@ def calc_loc_diff(flare_loc, dim_ns, dim_ew):
         return None
 
 def compare_flare_hand(target, auto, events, conf):
+    """steps through dimmings and compares the auto matches to the hand matches"""
+    
     hand_matches=read_hand_flares()   
 
     ind2=0
     mat=[]
     
     for index in range(len(target["date"])):
-
-
         while target["dim_name"][index][0:13]!=hand_matches["dim_name"][ind2][0:13]:
             ind2=ind2+1 
 
@@ -454,16 +461,10 @@ def compare_flare_hand(target, auto, events, conf):
         else:
             is_location.append(True)
             
-#    is_location=[False if x==None  else True for x in xray_flares['location'][auto]]
-#    print(is_location)
     auto_loc=[]
     conf_loc=[]
     mat_loc=[]
     target_name_loc=[]
-    auto_noloc=[]
-    conf_noloc=[]
-    mat_noloc=[]
-    target_name_noloc=[]
 
     #take only events with location
     auto_date=auto['date']
@@ -473,13 +474,7 @@ def compare_flare_hand(target, auto, events, conf):
             conf_loc.append(conf[ind])
             mat_loc.append(mat[ind])
             target_name_loc.append(target["dim_name"][ind])
-#        else:
-#            auto_noloc.append(auto[ind])
-#            conf_noloc.append(conf[ind])
-#            mat_noloc.append(mat[ind])
-#            target_name_noloc.append(target_name[ind])
-            
-    
+                
     [same, diff, auto_nohand, hand_noauto, null] = calc_overall_stats(auto_loc, conf_loc, mat_loc, hand_matches["date"], target_name_loc)
            
     print(" ")
@@ -495,8 +490,9 @@ def compare_flare_hand(target, auto, events, conf):
             
     
 def compare_cme_hand(target, auto, events, conf):
+    """steps through dimmings and compares the auto matches to the hand matches"""
+    
     hand_matches=read_hand_cmes()   
-#    print(target.keys())
     ind2=0
     mat=[]
     
@@ -522,60 +518,9 @@ def compare_cme_hand(target, auto, events, conf):
     print("automated match but no hand match", auto_nohand)
     print("different CME: ", diff)
     print("accuracy: ", 100*round((same+null)/(same+null+diff+hand_noauto+auto_nohand), 3), "%")
-#
-##    is_location=[False if x==None  else True for x in xray_flares['location'][auto]]
-##    print(is_location)
-#    auto_loc=[]
-#    conf_loc=[]
-#    mat_loc=[]
-#    target_name_loc=[]
-#    auto_noloc=[]
-#    conf_noloc=[]
-#    mat_noloc=[]
-#    target_name_noloc=[]
-#
-#    auto_date=auto['date']
-#    #take only events with location  -- might need this for mass
-#    for ind in range(len(is_location)):
-#        if is_location[ind]:
-#            auto_loc.append(auto_date[ind])
-#            conf_loc.append(conf[ind])
-#            mat_loc.append(mat[ind])
-#            target_name_loc.append(target["dim_name"][ind])
-##        else:
-##            auto_noloc.append(auto[ind])
-##            conf_noloc.append(conf[ind])
-##            mat_noloc.append(mat[ind])
-##            target_name_noloc.append(target_name[ind])
-#            
-##    print("auto loc", auto_loc['date'])
-#    [same, diff, auto_nohand, hand_noauto, null] = calc_overall_stats(auto_loc, conf_loc, mat_loc, hand_matches['date'], target_name_loc)
-#           
-#    print(" ")
-#    print(" ")
-#    print("When we know the location")    
-#    print("Overall statistics")
-#    print("same CME: ", same)
-#    print("same null: ", null)
-#    print("hand match but no automated match", hand_noauto)
-#    print("automated match but no hand match", auto_nohand)
-#    print("different CME: ", diff)
-#    print("accuracy: ", 100*round((same+null)/(same+null+diff+hand_noauto+auto_nohand), 3), "%")
-
-#    [same, diff, auto_nohand, hand_noauto, null] = calc_overall_stats(auto_noloc, conf_noloc, mat_noloc, xray_flares, hand_matches, target_name_noloc)
-#       
-#    print(" ")
-#    print(" ")
-#    print("When we don't know the location")    
-#    print("Overall statistics")
-#    print("same flare: ", same)
-#    print("same null: ", null)
-#    print("hand match but no automated match", hand_noauto)
-#    print("automated match but no hand match", auto_nohand)
-#    print("diff: ", diff)
-#    print("accuracy: ", 100*round((same+null)/(same+null+diff+hand_noauto+auto_nohand), 3), "%")   
     
 def flare_size(mag, size):
+    """ takes a flare magnitude and returns a decimal value indicating size"""
 
     if mag=='B':
         return size
@@ -588,14 +533,49 @@ def flare_size(mag, size):
     else:
         print("flare size not valid")
         return None        
-           
-        
-def match_dimmings_flaresCMEs(event_type='flares', print_results=False, hand_compare=False, training=False):
+            
+def coord2pa(ew_coord, ns_coord):
+    """routine to translate ew/ns coordinates into position angle"""
+    
+    x=ew_coord*1.0
+    y=ns_coord*1.0
 
+    pa=np.arctan(-x/y)
+
+    pa=pa*180.0/3.1415926
+
+    if y<0:
+        pa=pa+180    
+    if pa<0:
+        pa=pa+360
+        
+    if x==0 and y==0:
+        pa=-1
+
+    return pa
+           
+def match_dimmings_flaresCMEs(event_type='flares', print_results=False, hand_compare=False, training=False):
+    """This is the main program. The inputs are several keywords
+    
+    event_type: which can be 'cmes' or 'flares'
+    print_results: whether you get a printout of all the target dimmings/auto matches/hand matches
+    hand_compare: whether you want to compare with a hand drawn list
+    training: whether you want to take a portion of the data for training purposes or all of it
+    
+    Given that the program reads in the dimming data and the CME or flare data and does the automatching
+    
+    at the top of the file are some configurable parameters.  
+    FDmaxDist: maximum distance in degrees that the routine will look for an associated flare
+    CDmaxAngle: maximum angle in degrees that the routine will look for an associated CME
+    Fmaxhours: maximum number of hours positive/negative that the routine will look for an associated flare
+    Cmaxhours: maximum number of hours positive/negative that the routine will look for an associated CME
+    """
+    
     FDmaxDist=20
     CDmaxAngle=45
     Fmaxhours=2
-    Cmaxhours=2
+    Cmaxhours=4
+    
     if event_type=="flares":
         timediff=timedelta(hours=Fmaxhours)
     elif event_type=="cmes":
@@ -640,7 +620,8 @@ def match_dimmings_flaresCMEs(event_type='flares', print_results=False, hand_com
 
         possibilities=[]
         distance=[]
-
+        
+        #we loop over all the events and create arrays for match_time, match_big, match_dist -- these may not be the same
         for ind2 in range(len(events['date'])):
             
             dimtime=dimmings['date'][ind1]
@@ -694,10 +675,11 @@ def match_dimmings_flaresCMEs(event_type='flares', print_results=False, hand_com
 
                     event_size.append(flare_size(events['xray_class'][x], events['xray_size'][x]))
                 if event_type=="cmes":
-                    event_size.append(events["width"][x])
+                    event_size.append(events["mass"][x])
                 
-            biggest=event_size.index(max(event_size))
-
+            biggest=event_size.index(max(event_size))  #index of the largest event in the small 
+#            print("these are the sizes", event_size)
+#            print("this is the biggest", biggest)
             match_big.append(possibilities[biggest])
 
 
@@ -723,19 +705,20 @@ def match_dimmings_flaresCMEs(event_type='flares', print_results=False, hand_com
             else:
                 match_dist.append(possibilities[shortest_dist])            
 
-
+    #now we've finished determining the match that's closest in time, distance, and the largest, 
+    #so we use determine_conf_best_xxx to find the best match.  
     conf=[]
     auto=[]
     nulls=[None for x in events.keys()] #fill value for events with no matches
 
     
-    #initialize match dataframe
-    if event_type=="flares":
-        (best, confidence)= determine_conf_best_flare(match_time[0], match_big[0], match_dist[0], target_time[0], events)
-    elif event_type=="cmes":
-        (best, confidence)= determine_conf_best_cme(match_time[0], match_big[0], match_dist[0], target_time[0], events)
-    conf=[confidence]
-    auto=[best]
+#    #initialize match dataframe -- we
+#    if event_type=="flares":
+#        (best, confidence)= determine_conf_best_flare(match_time[0], match_big[0], match_dist[0], target_time[0], events)
+#    elif event_type=="cmes":
+#        (best, confidence)= determine_conf_best_cme(match_time[0], match_big[0], match_dist[0], target_time[0], events)
+#    conf=[confidence]
+#    auto=[best]
     matches=[]
 
 
@@ -764,25 +747,7 @@ def match_dimmings_flaresCMEs(event_type='flares', print_results=False, hand_com
     elif hand_compare==True and event_type=="cmes":
         compare_cme_hand(dimmings, matches, events, conf)
     return matches
-    
-        
-def coord2pa(ew_coord, ns_coord):
-    x=ew_coord*1.0
-    y=ns_coord*1.0
 
-    pa=np.arctan(-x/y)
-
-    pa=pa*180.0/3.1415926
-
-    if y<0:
-        pa=pa+180    
-    if pa<0:
-        pa=pa+360
-        
-    if x==0 and y==0:
-        pa=-1
-
-    return pa
           
 
 print("data path", data_path)

@@ -378,6 +378,7 @@ def create_datetime_flare(ymd, hm):
     
 def read_hand_flares():
     """reads in file containing the flares chosen by hand"""
+    
     file=os.path.join(data_path, "dim_flare_hand.txt")
     
     names=["dim_name", "date", "start", "end", "peak", "loc", "flare_class", 
@@ -568,17 +569,19 @@ def match_dimmings_flaresCMEs(event_type='flares', print_results=False, hand_com
     FDmaxDist: maximum distance in degrees that the routine will look for an associated flare
     CDmaxAngle: maximum angle in degrees that the routine will look for an associated CME
     Fmaxhours: maximum number of hours positive/negative that the routine will look for an associated flare
-    Cmaxhours: maximum number of hours positive/negative that the routine will look for an associated CME
+    Cmaxhours_before: maximum number of hours positive/negative that the routine will look for an associated CME
+    Cmaxhours_after: maximum number of hours after the dimming that the routine will look for an associated CME
     """
     
     FDmaxDist=20
     CDmaxAngle=45
     Fmaxhours=2
-    Cmaxhours=4
+    Cmaxhours_before=4
+    Cmaxhours_after=2
     
     if event_type=="flares":
         timediff=timedelta(hours=Fmaxhours)
-    elif event_type=="cmes":
+    elif event_type=="cmes":  ###!!!!need to update
         timediff=timedelta(hours=Cmaxhours)
     
     dimmings=read_Lars_peakdim(data_path, training=training)

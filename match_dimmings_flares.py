@@ -88,6 +88,38 @@ def print_summary_flares(dimming_vals, flare_vals, matches, hand=False):
                 print("Same Flare")
             else: 
                 print("Different flare")
+                
+    
+def output_summary_flares(dimming_vals, matches, filename="flare_output.txt"):
+    """input is the dimming, flare and (optional) the hand matches
+    routine prints the dimming and the matching flare values and the 
+    hand match (if present)"""
+
+    output=[]
+    print("\nSaving output to ", filename)
+    for ind in range(len(dimming_vals)):  #step through the dimmings
+        dimming=dimming_vals.loc[ind]
+        auto=matches.loc[ind]
+
+        output.append((dimming.dim_name, auto.date, auto.location, auto.xray_class, auto.xray_size, auto.NOAA_AR))
+
+    np.savetxt(filename, output, fmt="%s")
+
+def output_summary_cmes(dimming_vals, matches, filename="cme_output.txt"):
+    """input is the dimming, flare and (optional) the hand matches
+    routine prints the dimming and the matching flare values and the 
+    hand match (if present)"""
+
+    
+    output=[]
+    print("\nSaving output to ", filename)
+    for ind in range(len(dimming_vals)):  #step through the dimmings
+        dimming=dimming_vals.loc[ind]
+        auto=matches.loc[ind]
+
+        output.append((dimming.dim_name, auto.date, auto.mass, auto.width, auto.PA))
+
+    np.savetxt(filename, output, fmt="%s")
     
 def print_summary_cmes(dimming_vals, cme_vals, matches, hand=False):
     """input is the dimming, flare and (optional) the hand matches
@@ -540,8 +572,10 @@ def coord2pa(ew_coord, ns_coord):
     
     x=ew_coord*1.0
     y=ns_coord*1.0
-
-    pa=np.arctan(-x/y)
+    if y!=0:
+        pa=np.arctan(-x/y)
+    else:
+        pa=3.1415926/2.  #limit of arctan(infinity)
 
     pa=pa*180.0/3.1415926
 
@@ -575,15 +609,18 @@ def match_dimmings_flaresCMEs(event_type='flares', print_results=False, hand_com
     
     FDmaxDist=20
     CDmaxAngle=45
-    Fmaxhours=2
     Cmaxhours_before=4
     Cmaxhours_after=2
+    Fmaxhours_before=4
+    Fmaxhours_after=2
     
     if event_type=="flares":
-        timediff=timedelta(hours=Fmaxhours)
-    elif event_type=="cmes":  ###!!!!need to update
-        timediff=timedelta(hours=Cmaxhours)
-    
+        timeafter=timedelta(hours=Fmaxhours_after)
+        timebefore=timedelta(hours=Fmaxhours_before)
+    elif event_type=="cmes": 
+        timeafter=timedelta(hours=Cmaxhours_after)
+        timebefore=timedelta(hours=Cmaxhours_before)
+        
     dimmings=read_Lars_peakdim(data_path, training=training)
     if event_type=='flares':
         (events, ha_flares)=get_flare_catalog(data_path, 2013, 2014)
@@ -600,11 +637,14 @@ def match_dimmings_flaresCMEs(event_type='flares', print_results=False, hand_com
     min_event=min(events['date'])
     max_event=max(x for x in events['date'] if x is not None)
     
-    print("event times", min_event, max_event)
-    print("dimming times", min_dimtime, max_dimtime)
+    print("\nEvent times:", min_event, max_event)
+    print("Dimming times:", min_dimtime, max_dimtime)
     
     if ((min_event<min_dimtime and max_event>min_dimtime) or (min_event<max_dimtime and max_event>max_dimtime)):
-        print("we have overlap!!")
+        print("Event times overlap with dimming times, calculating matches")
+    else:
+        print("event_times do not overlap with dimming times, returning")
+        return 0
 
     #let's start with stepping through the dimmings
     match_time=[]
@@ -630,7 +670,7 @@ def match_dimmings_flaresCMEs(event_type='flares', print_results=False, hand_com
             dimtime=dimmings['date'][ind1]
             eventtime=events['date'][ind2]
 
-            if eventtime !=None and eventtime<(dimtime+timediff) and eventtime>(dimtime-timediff):
+            if eventtime !=None and eventtime<(dimtime+timeafter) and eventtime>(dimtime-timebefore):
                 #now check location
                 if event_type=='flares':
                     event_loc=events['location'][ind2]
@@ -734,11 +774,15 @@ def match_dimmings_flaresCMEs(event_type='flares', print_results=False, hand_com
         auto.append(best)
 
         if best !=None:
-            matches.append(events.ix[best].tolist())#, keys=events.keys())      
+            matches.append(events.ix[best].tolist())
         else:
-            matches.append(nulls)#, keys=events.keys())
+            matches.append(nulls)
 
     matches=pd.DataFrame(matches, columns=events.keys())
+    if event_type=="flares":
+        output_summary_flares(dimmings, matches)
+    elif event_type=="cmes":
+        output_summary_cmes(dimmings, matches)
 
     if print_results==True and event_type=="flares":
         print_summary_flares(dimmings, events, matches, hand=hand_compare)#, event_type=event_type)
@@ -749,11 +793,13 @@ def match_dimmings_flaresCMEs(event_type='flares', print_results=False, hand_com
         compare_flare_hand(dimmings, matches, events, conf)
     elif hand_compare==True and event_type=="cmes":
         compare_cme_hand(dimmings, matches, events, conf)
+
+
+
     return matches
+    
 
-          
-
-print("data path", data_path)
-auto_matches=match_dimmings_flaresCMEs(event_type='flares', print_results=True, hand_compare=True, training=False)
+         
+auto_matches=match_dimmings_flaresCMEs(event_type='cmes', print_results=False, hand_compare=False, training=False)
 #print_events(auto_matches, dimmings)
     

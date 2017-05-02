@@ -13,11 +13,6 @@ import pandas as pd
 from sunpy_time import parse_time
 
 def read_Lars_peakdim(data_path=os.path.join(os.path.dirname(os.path.realpath(__file__)), "data"), training=False):
- #   rootdir=os.getcwd()+"/Lars dimmings/Example_dimmings/"  
-#    print("root first", rootdir)
-    
-#    print("root", rootdir)
-  #  dim_num=[]
 
     time=[]
     latloc=[]
@@ -27,7 +22,7 @@ def read_Lars_peakdim(data_path=os.path.join(os.path.dirname(os.path.realpath(__
     dim_name=[]
 
     rootdir=os.path.join(data_path, "SAV_files")+os.sep
-    print("fulldir", rootdir)
+    print("\nReading peak dimming information files from:", rootdir)
         
     files=os.listdir(rootdir+os.sep)
     
@@ -41,7 +36,7 @@ def read_Lars_peakdim(data_path=os.path.join(os.path.dirname(os.path.realpath(__
 
     for file in files:
         if "_peakdim_props" in file:
-            print("reading", file)
+#            print("reading", file)
             count+=1
 
             if training == True and count>training_number:
@@ -70,5 +65,3 @@ def read_Lars_peakdim(data_path=os.path.join(os.path.dirname(os.path.realpath(__
     dimmings=pd.DataFrame(dimmings)
 #    print("in routine", type(dimmings))
     return dimmings
-
-read_Lars_peakdim()

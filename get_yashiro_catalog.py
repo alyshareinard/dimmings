@@ -6,6 +6,7 @@ def get_yashiro_catalog(data_path=os.path.join(os.path.dirname(os.path.realpath(
     """ program to read in yashiro CME catalog """
 
     cme_file=data_path+"/yashiro_all.txt"
+    print("\nReading CME data from: ", cme_file)
 
 
     names=["ymd", "hour", "sep", "minute", "sep2", "sec", "PA", "width",
@@ -28,5 +29,3 @@ def get_yashiro_catalog(data_path=os.path.join(os.path.dirname(os.path.realpath(
     cmes.mass=cmes.mass.astype(float)
 #    print(type(cmes["mass"][0]))
     return cmes
-
-get_yashiro_catalog()

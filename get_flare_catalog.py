@@ -1,7 +1,5 @@
 import os
 from datetime import datetime
-import pickle
-from urllib.request import urlopen
 import pandas as pd
 import numpy as np
 import math
@@ -64,13 +62,12 @@ def download_flare_catalog(start_year, stop_year):
     count=0
     #strange character at the end of teh 2003 file causes trouble
     for getyear in range(start_year, stop_year):  
-        print("year: ", getyear)
         web_stem="http://www.ngdc.noaa.gov/stp/space-weather/solar-data/solar-features/solar-flares/x-rays/goes/xrs/"
         xray_webpage=web_stem+"goes-xrs-report_"+str(getyear)+".txt"
         web_stem="https://www.ngdc.noaa.gov/stp/space-weather/solar-data/solar-features/solar-flares/h-alpha/reports/kanzelhohe/halpha-flare-reports_kanz_"
-        ha_webpage=web_stem+str(getyear)+".txt"
-        print(xray_webpage)
-        print(ha_webpage)
+#        ha_webpage=web_stem+str(getyear)+".txt"
+        print("\nGetting xray flares from: ", xray_webpage, "for year ", getyear)
+#        print(ha_webpage)
                
         names=["data code", "station code", "year", "month", "day", "init_ind", "init_time", "final_ind", "final_time", "peak_ind", 
                "peak_time", "location", "optical", "something", "xray_class", "xray_size", "station", "blank", "NOAA_AR", "etc"]
@@ -109,9 +106,10 @@ def get_flare_catalog_fromfile(data_path):
     """ peak_time, optical_importance, optical_brightness, xray_class, """
     """ xray_size, NOAA_AR """
     #define data file location
-    ha_file=data_path+"/ha.txt"
+#    ha_file=data_path+"/ha.txt"
     xray_file=data_path+"/xray.txt"
-
+    print("Getting from file, years are only those downloaded")
+    print("Reading X-ray flares from: ", xray_file)
     #code to read in xray data
     names=["data code", "station code", "year", "month", "day", "init_ind", "init_time", "final_ind", "final_time", "peak_ind", 
            "peak_time", "location", "optical", "something", "xray_class", "xray_size", "station", "blank", "NOAA_AR", "etc"]
@@ -133,11 +131,8 @@ def get_flare_catalog_fromfile(data_path):
 def get_flare_catalog(data_path=os.path.join(os.path.dirname(os.path.realpath(__file__)), "data"), start_year=2013, stop_year=2014):
 
     try:
-        print("downloading")
         (xray, halpha)=download_flare_catalog(start_year, stop_year)
     except:
-        print("getting from file, years are only those downloaded")
         (xray, halpha)=get_flare_catalog_fromfile(data_path)
     return (xray, halpha)
                             
-get_flare_catalog()

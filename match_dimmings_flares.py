@@ -800,6 +800,6 @@ def match_dimmings_flaresCMEs(event_type='flares', print_results=False, hand_com
     
 
          
-auto_matches=match_dimmings_flaresCMEs(event_type='cmes', print_results=False, hand_compare=False, training=False)
-#print_events(auto_matches, dimmings)
+auto_matches=match_dimmings_flaresCMEs(event_type='flares', print_results=False, hand_compare=False, training=False)
+
     

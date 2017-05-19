@@ -5,7 +5,14 @@ from datetime import datetime
 def get_yashiro_catalog(data_path=os.path.join(os.path.dirname(os.path.realpath(__file__)), "data")):
     """ program to read in yashiro CME catalog """
 
-    cme_file=data_path+"/yashiro_all.txt"
+    #try downloading the data
+    try:
+        cme_file="https://cdaw.gsfc.nasa.gov/CME_list/UNIVERSAL/text_ver/univ_all.txt"
+
+    #if that doesn't work, use the local file
+    except:
+        cme_file=data_path+"/yashiro_all.txt"
+        
     print("\nReading CME data from: ", cme_file)
 
 
@@ -22,10 +29,8 @@ def get_yashiro_catalog(data_path=os.path.join(os.path.dirname(os.path.realpath(
         date.append(datetime(int(ymd[0]), int(ymd[1]), int(ymd[2]), cmes["hour"][i], cmes["minute"][i]))#, cmes["sec"][i]))
     
     cmes["date"]=date
-#    print(cmes["mass"])
-    cmes["mass"]=cmes["mass"].replace("-------", "-1")
-    
-#    cmes["mass"]=float(cmes["mass"])
+
+    cmes["mass"]=cmes["mass"].replace("-------", "-1").replace("*******", "-1")
     cmes.mass=cmes.mass.astype(float)
-#    print(type(cmes["mass"][0]))
+
     return cmes

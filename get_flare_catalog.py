@@ -3,28 +3,36 @@ from datetime import datetime
 import pandas as pd
 import numpy as np
 import math
+import requests
 
 def create_datetime(ymd, hm):
     date=[]
     #unpack ymd and fix year
 
     for item, ihm in zip(ymd, hm):
-        if item=="  ":
+        if item=="  " or item=="" or ihm=="////":
             date.append(None)
             continue
         
         datestr=item.split()
         
-        year=int(datestr[0])
-        month=int(datestr[1])
-        day=int(datestr[2])
+        
+        try:
+            year=int(float(datestr[0]))
+            month=int(float(datestr[1]))
+            day=int(float(datestr[2]))
+            
+        except: #this happens when the time is bad or absent
+            date.append(np.nan)
+            continue
 
         #fix two year dates without messing up 4 year dates
         if year<70: 
             year=year+2000
         elif  year<100: 
             year+=1900
-        
+
+        ihm=int(ihm)
         if math.isnan(ihm)==False:
             hour=math.floor(ihm/100)
             minute=math.floor(ihm-hour*100)
@@ -55,17 +63,33 @@ def check_daymonth(day, month, year):
         
                 
 def download_flare_catalog(start_year, stop_year):
-    """ program to read in GOES h-alpha and x-ray flare information from web"""
-    """ usage: [ha, xray]=get_flare_catalog; ha is a pandas dataframe"""
-    """ ha['location'][300] prints the 300th location"""
+    """ program to read in GOES h-alpha and x-ray flare information from web
+    usage: [ha, xray]=get_flare_catalog; ha is a pandas dataframe
+    ha['location'][300] prints the 300th location
+    start_year is the first year, stop_year is the last year you want data for
+    """
 
     count=0
     #strange character at the end of teh 2003 file causes trouble
-    for getyear in range(start_year, stop_year):  
-        web_stem="http://www.ngdc.noaa.gov/stp/space-weather/solar-data/solar-features/solar-flares/x-rays/goes/xrs/"
+    for getyear in range(start_year, stop_year+1): #+1 so the last year is also included  
+        web_stem="https://www.ngdc.noaa.gov/stp/space-weather/solar-data/solar-features/solar-flares/x-rays/goes/xrs/"
         xray_webpage=web_stem+"goes-xrs-report_"+str(getyear)+".txt"
-        web_stem="https://www.ngdc.noaa.gov/stp/space-weather/solar-data/solar-features/solar-flares/h-alpha/reports/kanzelhohe/halpha-flare-reports_kanz_"
+#        web_stem="https://www.ngdc.noaa.gov/stp/space-weather/solar-data/solar-features/solar-flares/h-alpha/reports/kanzelhohe/halpha-flare-reports_kanz_"
 #        ha_webpage=web_stem+str(getyear)+".txt"
+        
+        #check to see if the website exists
+        site_ping = requests.head(xray_webpage)
+        
+        #the url for the current year includes "-ytd"
+        if site_ping.status_code >= 400:
+            print(" ")
+            print(xray_webpage, "doesn't exist, trying '-ytd.txt'")
+            xray_webpage=web_stem+"goes-xrs-report_"+str(getyear)+"-ytd.txt"
+            site_ping = requests.head(xray_webpage)
+            if site_ping.status_code>=400:
+                print(xray_webpage, "does not exist, reading from file")
+                raise Exception
+
         print("\nGetting xray flares from: ", xray_webpage, "for year ", getyear)
 #        print(ha_webpage)
                
@@ -76,7 +100,8 @@ def download_flare_catalog(start_year, stop_year):
         xray_df_year=pd.read_fwf(xray_webpage, widths=widths, header=None, names=names)#, parse_dates=[[2, 3, 4]])
         xray_df_year["year_month_day"]=[str(x)+" "+str(y)+" "+str(z) for x,y,z in zip(xray_df_year["year"], xray_df_year["month"], xray_df_year["day"])]
 
-
+        #clean out blank lines
+        
         
         xray_df_year["init_date"]=create_datetime(xray_df_year["year_month_day"], xray_df_year["init_time"])
         xray_df_year["peak_date"]=create_datetime(xray_df_year["year_month_day"], xray_df_year["peak_time"])
@@ -93,7 +118,12 @@ def download_flare_catalog(start_year, stop_year):
 #            dfs=[ha_df, ha_df_year]
 #            ha_df=pd.concat(dfs)
             dfs=[xray_df, xray_df_year]
-            xray_df=pd.concat(dfs)
+            xray_df=pd.concat(dfs, ignore_index=True)
+    #remove all the lines that don't have either a valid peak data or a valid init date (both have to be lacking)
+
+#    xray_df = xray_df[pd.notnull(xray_df['init_date']) | pd.notnull(xray_df['peak_date'])]  
+#    xray_df.reset_index(drop=True)
+    
     ha_df="not yet implemented"
     return (xray_df, ha_df)
 
@@ -124,7 +154,11 @@ def get_flare_catalog_fromfile(data_path):
     xray_df["final_date"]=create_datetime(xray_df["year_month_day"], xray_df["final_time"])
 
     xray_df=xray_df[["init_date", "peak_date", "final_date", "location", "xray_class", "xray_size", "NOAA_AR"]]
-       
+    
+    #remove all the lines that don't have either a valid peak data or a valid init date (both have to be lacking)
+#    print("len before", len(xray_df))
+#    xray_df = xray_df[np.isfinite(xray_df['peak_date']) | np.insfinite(xray_df['init_date'])]  
+#    print("len after", len(xray_df))
     ha_df="not yet implemented"
     return (xray_df, ha_df)
 

@@ -589,7 +589,7 @@ def coord2pa(ew_coord, ns_coord):
 
     return pa
            
-def match_dimmings_flaresCMEs(event_type='flares', print_results=False, hand_compare=False, training=False):
+def match_dimmings_flaresCMEs(event_type='flares', print_results=False, hand_compare=False, training=False, start_year=2013, end_year=2017):
     """This is the main program. The inputs are several keywords
     
     event_type: which can be 'cmes' or 'flares'
@@ -623,7 +623,7 @@ def match_dimmings_flaresCMEs(event_type='flares', print_results=False, hand_com
         
     dimmings=read_Lars_peakdim(data_path, training=training)
     if event_type=='flares':
-        (events, ha_flares)=get_flare_catalog(data_path, 2013, 2014)
+        (events, ha_notimplemented)=get_flare_catalog(data_path, start_year, end_year)
         events['date']=events['peak_date']  #this can be used to chose initial_date if needed -- need to also change in read_hand_flares
     elif event_type == 'cmes':
         events=CMEs.get_yashiro_catalog(data_path)
@@ -645,6 +645,7 @@ def match_dimmings_flaresCMEs(event_type='flares', print_results=False, hand_com
     else:
         print("event_times do not overlap with dimming times, returning")
         return 0
+    
 
     #let's start with stepping through the dimmings
     match_time=[]
@@ -668,7 +669,9 @@ def match_dimmings_flaresCMEs(event_type='flares', print_results=False, hand_com
         for ind2 in range(len(events['date'])):
             
             dimtime=dimmings['date'][ind1]
+#            print("ind2", ind2, len(events['date']))
             eventtime=events['date'][ind2]
+
 
             if eventtime !=None and eventtime<(dimtime+timeafter) and eventtime>(dimtime-timebefore):
                 #now check location
@@ -800,6 +803,6 @@ def match_dimmings_flaresCMEs(event_type='flares', print_results=False, hand_com
     
 
          
-auto_matches=match_dimmings_flaresCMEs(event_type='flares', print_results=False, hand_compare=False, training=False)
+auto_matches=match_dimmings_flaresCMEs(event_type='flares', print_results=False, hand_compare=False, training=False, start_year=2010, end_year=2017)
 
     

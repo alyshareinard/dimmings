@@ -440,7 +440,8 @@ def read_hand_cmes():
 def calc_loc_diff(flare_loc, dim_ns, dim_ew):
     """takes a flare coordinate location and a dimming NS and EW and determines
     the cartesian distance between the dimming and flare"""
-    if flare_loc !=None:   
+    if flare_loc !=None and type(flare_loc)==str:   
+        
         ns=int(flare_loc[1:3])
         if flare_loc[0]=="S": ns=-ns
         ew=int(flare_loc[4:6])
@@ -777,7 +778,7 @@ def match_dimmings_flaresCMEs(event_type='flares', print_results=False, hand_com
         auto.append(best)
 
         if best !=None:
-            matches.append(events.ix[best].tolist())
+            matches.append(events.iloc[best].tolist())
         else:
             matches.append(nulls)
 

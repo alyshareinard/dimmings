@@ -164,9 +164,20 @@ def get_flare_catalog_fromfile(data_path):
 
 def get_flare_catalog(data_path=os.path.join(os.path.dirname(os.path.realpath(__file__)), "data"), start_year=2013, stop_year=2014):
 
+    #first try to read from the the file that download_flare_catalog creates -- delete if you want to redownload the data
+
     try:
-        (xray, halpha)=download_flare_catalog(start_year, stop_year)
+
+        xray=pd.read_csv("xray_flares.txt", sep=" ", index_col=0, parse_dates=['init_date', 'peak_date', 'final_date'])
+        ha_df="not yet implemented"
+        return (xray, ha_df)
     except:
-        (xray, halpha)=get_flare_catalog_fromfile(data_path)
-    return (xray, halpha)
+        #then try to download
+        try:
+            (xray, halpha)=download_flare_catalog(start_year, stop_year)
+            xray.to_csv("xray_flares.txt", sep=" ")
+        #finally, try to read from the original files
+        except:
+            (xray, halpha)=get_flare_catalog_fromfile(data_path)
+        return (xray, halpha)
                             
